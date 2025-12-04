@@ -51,11 +51,61 @@ let bpmDetector = null;
 let currentBPM = null;
 
 // Initialize page
+// Navigation Menu Functionality
+function initNavMenu() {
+    const menuToggle = document.getElementById('menuToggle');
+    const navMenuClose = document.getElementById('navMenuClose');
+    const navMenu = document.getElementById('navMenu');
+    const navMenuOverlay = document.getElementById('navMenuOverlay');
+    const navMenuLinks = document.querySelectorAll('.nav-menu-link');
+
+    function openNavMenu() {
+        navMenu.classList.add('active');
+        navMenuOverlay.classList.add('active');
+        menuToggle.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeNavMenu() {
+        navMenu.classList.remove('active');
+        navMenuOverlay.classList.remove('active');
+        menuToggle.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (menuToggle) {
+        menuToggle.addEventListener('click', openNavMenu);
+    }
+
+    if (navMenuClose) {
+        navMenuClose.addEventListener('click', closeNavMenu);
+    }
+
+    if (navMenuOverlay) {
+        navMenuOverlay.addEventListener('click', closeNavMenu);
+    }
+
+    // Close menu when clicking on nav links
+    navMenuLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            setTimeout(closeNavMenu, 300); // Delay to allow navigation
+        });
+    });
+
+    // Close menu on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+            closeNavMenu();
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     setupCategoryButtons();
     setupNavigation();
     fetchSoundCloudPlaylist();
     initMusicPlayer();
+    initNavMenu();
     
     // Update play button when audio starts/stops
     const audioPlayer = document.getElementById('audioPlayer');
