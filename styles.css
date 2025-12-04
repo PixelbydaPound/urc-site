@@ -1037,7 +1037,7 @@ footer {
     right: -400px;
     width: 400px;
     height: 100vh;
-    background-color: var(--bg-color);
+    background-color: #ffffff;
     border-left: var(--border-width) solid var(--accent-color);
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
     z-index: 1000;
@@ -1045,6 +1045,7 @@ footer {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    color: var(--text-color);
 }
 
 .playlist-panel.active {
@@ -1140,6 +1141,7 @@ footer {
     margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 1px;
+    color: var(--text-color);
 }
 
 .track-artist-large {
@@ -1147,6 +1149,7 @@ footer {
     font-size: 16px;
     opacity: 0.7;
     margin-bottom: 20px;
+    color: var(--text-color);
 }
 
 .track-metadata {
@@ -1154,6 +1157,7 @@ footer {
     font-size: 12px;
     opacity: 0.6;
     line-height: 1.8;
+    color: var(--text-color);
 }
 
 .playlist-tracks {
@@ -1211,6 +1215,7 @@ footer {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--text-color);
 }
 
 .track-artist-small {
@@ -1220,6 +1225,7 @@ footer {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--text-color);
 }
 
 .track-duration {
@@ -1227,6 +1233,7 @@ footer {
     font-size: 12px;
     opacity: 0.6;
     margin-left: auto;
+    color: var(--text-color);
 }
 
 @media (max-width: 768px) {
