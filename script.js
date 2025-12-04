@@ -248,7 +248,7 @@ function showProducts(category) {
     
     // Scroll to products section if on main page
     const productsSection = document.querySelector('.products-section');
-    if (productsSection && window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
+    if (productsSection && (window.location.pathname === '/' || window.location.pathname.includes('index.html'))) {
         setTimeout(() => {
             productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
