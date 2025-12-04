@@ -363,19 +363,19 @@ function loadPodcastEpisodes() {
     
     episodesContainer.innerHTML = '';
     
-    // Define custom order mapping:
-    // Top row: Francula (Vol 5), Victor Reyes (Vol 4), Yeppec (Vol 3)
-    // Bottom row: Samuel Tagger (Vol 2), 4niq (Vol 1)
-    // Final order: Francula=0, Victor=1, Yeppec=2, Samuel Tagger=3, 4niq=4
+    // Define custom order mapping based on image:
+    // Top row: Francula (Vol 5), Victor Reyes (Vol 4), Samuel Tagger (Vol 2)
+    // Bottom row: 4niq (Vol 1), Yeppec (Vol 3)
+    // Final order: Francula=0, Victor=1, Samuel Tagger=2, 4niq=3, Yeppec=4
     const orderMapping = {
         'francula': 0,
         'victor': 1,
         'victor reyes': 1,  // Also check for full name
-        'yeppec': 2,
-        'samuel tagger': 3,
-        'samuel': 3,  // Also check for just "samuel"
-        'tagger': 3,  // Also check for "tagger"
-        '4niq': 4
+        'samuel tagger': 2,
+        'samuel': 2,  // Also check for just "samuel"
+        'tagger': 2,  // Also check for "tagger"
+        '4niq': 3,
+        'yeppec': 4
     };
     
     // Helper function to find episode order index
