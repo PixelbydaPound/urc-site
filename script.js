@@ -363,13 +363,37 @@ function loadPodcastEpisodes() {
     
     episodesContainer.innerHTML = '';
     
-    // Reverse the array so most recent (5) appears first at top left
-    // Create a reversed copy to maintain original index mapping
-    const reversedEpisodes = [...podcastEpisodes].reverse();
+    // Define the desired order: Francula, Victor, Yeppec, Tagger, 4niq
+    const episodeOrder = ['francula', 'victor', 'yeppec', 'tagger', '4niq'];
     
-    reversedEpisodes.forEach((episode, displayIndex) => {
-        // Calculate original index (before reversal) for correct track mapping
-        const originalIndex = podcastEpisodes.length - 1 - displayIndex;
+    // Helper function to find episode order index
+    function getEpisodeOrderIndex(episode) {
+        const titleLower = (episode.title || '').toLowerCase();
+        const artistLower = (episode.artist || '').toLowerCase();
+        const searchText = titleLower + ' ' + artistLower;
+        
+        for (let i = 0; i < episodeOrder.length; i++) {
+            if (searchText.includes(episodeOrder[i])) {
+                return i;
+            }
+        }
+        // If not found, put at end
+        return episodeOrder.length;
+    }
+    
+    // Create array with original index and sort by custom order
+    const episodesWithIndex = podcastEpisodes.map((episode, originalIndex) => ({
+        episode,
+        originalIndex,
+        orderIndex: getEpisodeOrderIndex(episode)
+    }));
+    
+    // Sort by order index (Francula=0, Victor=1, Yeppec=2, Tagger=3, 4niq=4)
+    episodesWithIndex.sort((a, b) => a.orderIndex - b.orderIndex);
+    
+    // Display episodes in the sorted order
+    episodesWithIndex.forEach((item, displayIndex) => {
+        const { episode, originalIndex } = item;
         
         const episodeCard = document.createElement('div');
         episodeCard.className = 'podcast-episode';
