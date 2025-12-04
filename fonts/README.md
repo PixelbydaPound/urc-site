@@ -4,23 +4,39 @@ Place your font files here:
 
 ## Required Fonts:
 
-### A. Monument Grotesk
-- `AMonumentGrotesk-Regular.woff2`
-- `AMonumentGrotesk-Regular.woff`
-- `AMonumentGrotesk-Bold.woff2`
-- `AMonumentGrotesk-Bold.woff`
+### Monument Grotesk (H1 Headings)
+- `MonumentGrotesk-Regular.woff2`
+- `MonumentGrotesk-Regular.woff`
+- `MonumentGrotesk-Bold.woff2`
+- `MonumentGrotesk-Bold.woff`
 
-### Neue Haas Grotesk
-Neue Haas Grotesk is available as Helvetica Neue on most systems, so it will use system fonts as fallback. If you have the font files, you can add them here and update the CSS.
+**Fallback:** Also accepts `AMonumentGrotesk-*` files if Monument Grotesk files are not available.
+
+### Neue Haas Grotesk (Body + Menu)
+- `NeueHaasGrotesk-Roman.woff2` (Regular)
+- `NeueHaasGrotesk-Roman.woff` (Regular)
+- `NeueHaasGrotesk-Medium.woff2` (Medium weight)
+- `NeueHaasGrotesk-Medium.woff` (Medium weight)
+- `NeueHaasGrotesk-Bold.woff2` (Bold)
+- `NeueHaasGrotesk-Bold.woff` (Bold)
+
+**Fallback:** Uses Helvetica Neue (system font) if font files are not available.
 
 ## Font Sources:
 
-- A. Monument Grotesk: Available from various font foundries
-- Neue Haas Grotesk: System font (Helvetica Neue) or available from font foundries
+- **Monument Grotesk**: Available from various font foundries
+- **Neue Haas Grotesk**: Available from font foundries or use system Helvetica Neue
+
+## Typography Usage:
+
+- **H1**: Monument Grotesk
+- **H2-H6**: Monument Grotesk (with fallbacks)
+- **Body text**: Neue Haas Grotesk
+- **Navigation/Menu**: Neue Haas Grotesk
 
 ## Note:
 
 If font files are not available, the site will fallback to:
-- A. Monument Grotesk → Helvetica Neue → Helvetica → Arial
+- Monument Grotesk → Helvetica Neue → Helvetica → Arial
 - Neue Haas Grotesk → Helvetica Neue → Helvetica → Arial
 

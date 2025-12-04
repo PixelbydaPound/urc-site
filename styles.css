@@ -1,7 +1,9 @@
 /* Font Face Declarations */
 @font-face {
-    font-family: 'A. Monument Grotesk';
-    src: url('fonts/AMonumentGrotesk-Regular.woff2') format('woff2'),
+    font-family: 'Monument Grotesk';
+    src: url('fonts/MonumentGrotesk-Regular.woff2') format('woff2'),
+         url('fonts/MonumentGrotesk-Regular.woff') format('woff'),
+         url('fonts/AMonumentGrotesk-Regular.woff2') format('woff2'),
          url('fonts/AMonumentGrotesk-Regular.woff') format('woff');
     font-weight: normal;
     font-style: normal;
@@ -9,9 +11,38 @@
 }
 
 @font-face {
-    font-family: 'A. Monument Grotesk';
-    src: url('fonts/AMonumentGrotesk-Bold.woff2') format('woff2'),
+    font-family: 'Monument Grotesk';
+    src: url('fonts/MonumentGrotesk-Bold.woff2') format('woff2'),
+         url('fonts/MonumentGrotesk-Bold.woff') format('woff'),
+         url('fonts/AMonumentGrotesk-Bold.woff2') format('woff2'),
          url('fonts/AMonumentGrotesk-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Neue Haas Grotesk';
+    src: url('fonts/NeueHaasGrotesk-Roman.woff2') format('woff2'),
+         url('fonts/NeueHaasGrotesk-Roman.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Neue Haas Grotesk';
+    src: url('fonts/NeueHaasGrotesk-Medium.woff2') format('woff2'),
+         url('fonts/NeueHaasGrotesk-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Neue Haas Grotesk';
+    src: url('fonts/NeueHaasGrotesk-Bold.woff2') format('woff2'),
+         url('fonts/NeueHaasGrotesk-Bold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
@@ -29,17 +60,21 @@
     --accent-color: #000;
     --border-width: 2px;
     --shadow-offset: 4px;
-    --font-heading: 'A. Monument Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    --font-body: 'Helvetica Neue', 'Neue Haas Grotesk', Helvetica, Arial, sans-serif;
+    --font-heading: 'Monument Grotesk', 'A. Monument Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-body: 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1 {
+    font-family: 'Monument Grotesk', 'A. Monument Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
 }
 
 body {
-    font-family: var(--font-body);
+    font-family: 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
     line-height: 1.6;
@@ -64,7 +99,7 @@ nav {
     align-items: center;
     max-width: 1200px;
     margin: 0 auto;
-    font-family: var(--font-body);
+    font-family: 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 .hero .logo-container {
@@ -87,7 +122,7 @@ nav {
 }
 
 .nav-links a {
-    font-family: var(--font-body);
+    font-family: 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     color: var(--text-color);
     text-decoration: none;
     font-weight: 600;
