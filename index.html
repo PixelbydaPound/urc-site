@@ -125,7 +125,7 @@
                     </div>
                 </div>
                 <div class="tempo-control">
-                    <div class="bpm-display">
+                    <div class="bpm-display" style="display: none;">
                         <span class="bpm-label">BPM</span>
                         <span class="bpm-value" id="bpmValue">--</span>
                     </div>
@@ -165,6 +165,37 @@
         </div>
         <audio id="audioPlayer" preload="metadata"></audio>
     </div>
+
+    <!-- Playlist Slide-out Panel -->
+    <div class="playlist-panel" id="playlistPanel">
+        <div class="playlist-panel-header">
+            <h3>NOW PLAYING</h3>
+            <button class="playlist-close-btn" id="playlistCloseBtn" aria-label="Close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="playlist-content" id="playlistContent">
+            <div class="current-track-info" id="currentTrackInfo">
+                <div class="track-artwork-large" id="trackArtworkLarge">
+                    <div class="artwork-placeholder">URC</div>
+                </div>
+                <div class="track-details">
+                    <h2 class="track-title-large" id="trackTitleLarge">Select a track</h2>
+                    <p class="track-artist-large" id="trackArtistLarge">URC</p>
+                    <div class="track-metadata" id="trackMetadata">
+                        <!-- Metadata will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="playlist-tracks" id="playlistTracks">
+                <!-- Playlist tracks will be loaded here -->
+            </div>
+        </div>
+    </div>
+    <div class="playlist-overlay" id="playlistOverlay"></div>
 
     <script src="https://w.soundcloud.com/player/api.js"></script>
     <script src="script.js"></script>

@@ -189,6 +189,10 @@ function loadSoundCloudWidget() {
                                 updatePlayerMetadata();
                             });
                             
+                            soundcloudWidget.bind(window.SC.Widget.Events.PLAY, () => {
+                                updatePlayerMetadata();
+                            });
+                            
                             loadPodcastEpisodes();
                         } else {
                             // Fallback: Show embedded playlist
@@ -372,6 +376,11 @@ function updatePlayerMetadata() {
                 } else {
                     thumbnail.innerHTML = '<div class="thumbnail-placeholder">URC</div>';
                 }
+                
+                // Update playlist panel if open
+                if (document.getElementById('playlistPanel').classList.contains('active')) {
+                    updatePlaylistPanelTrack(sound);
+                }
             }
         });
     }
@@ -448,10 +457,28 @@ function initMusicPlayer() {
         });
     }
 
-    // Playlist button (can be extended to show playlist)
+    // Playlist panel functionality
+    const playlistPanel = document.getElementById('playlistPanel');
+    const playlistOverlay = document.getElementById('playlistOverlay');
+    const playlistCloseBtn = document.getElementById('playlistCloseBtn');
+    
     playlistBtn.addEventListener('click', () => {
-        // Add playlist functionality here
-        console.log('Playlist clicked');
+        openPlaylistPanel();
+    });
+    
+    playlistCloseBtn.addEventListener('click', () => {
+        closePlaylistPanel();
+    });
+    
+    playlistOverlay.addEventListener('click', () => {
+        closePlaylistPanel();
+    });
+    
+    // Close panel on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && playlistPanel.classList.contains('active')) {
+            closePlaylistPanel();
+        }
     });
     
     // Initialize volume and tempo
@@ -827,6 +854,154 @@ function detectBPM() {
     };
     
     detectPeaks();
+}
+
+// Playlist Panel Functions
+function openPlaylistPanel() {
+    const playlistPanel = document.getElementById('playlistPanel');
+    const playlistOverlay = document.getElementById('playlistOverlay');
+    
+    playlistPanel.classList.add('active');
+    playlistOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Populate playlist if not already done
+    if (podcastEpisodes.length > 0 && document.getElementById('playlistTracks').children.length === 0) {
+        populatePlaylistTracks();
+    }
+    
+    // Update current track info
+    updateCurrentTrackInPanel();
+}
+
+function closePlaylistPanel() {
+    const playlistPanel = document.getElementById('playlistPanel');
+    const playlistOverlay = document.getElementById('playlistOverlay');
+    
+    playlistPanel.classList.remove('active');
+    playlistOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function updateCurrentTrackInPanel() {
+    if (soundcloudWidget) {
+        soundcloudWidget.getCurrentSound((sound) => {
+            if (sound) {
+                updatePlaylistPanelTrack(sound);
+            }
+        });
+    } else if (musicTracks.length > 0 && currentTrackIndex >= 0) {
+        const track = musicTracks[currentTrackIndex];
+        const trackInfo = {
+            title: track.title,
+            user: { username: track.artist },
+            artwork_url: track.thumbnail,
+            description: '',
+            duration: 0,
+            created_at: '',
+            playback_count: 0
+        };
+        updatePlaylistPanelTrack(trackInfo);
+    }
+}
+
+function updatePlaylistPanelTrack(sound) {
+    const artworkLarge = document.getElementById('trackArtworkLarge');
+    const titleLarge = document.getElementById('trackTitleLarge');
+    const artistLarge = document.getElementById('trackArtistLarge');
+    const metadata = document.getElementById('trackMetadata');
+    
+    if (!artworkLarge || !titleLarge || !artistLarge || !metadata) return;
+    
+    // Update artwork
+    if (sound.artwork_url) {
+        artworkLarge.innerHTML = `<img src="${sound.artwork_url.replace('large', 't500x500')}" alt="${sound.title}">`;
+    } else if (sound.user?.avatar_url) {
+        artworkLarge.innerHTML = `<img src="${sound.user.avatar_url}" alt="${sound.title}">`;
+    } else {
+        artworkLarge.innerHTML = '<div class="artwork-placeholder">URC</div>';
+    }
+    
+    // Update title and artist
+    titleLarge.textContent = sound.title || 'Unknown Track';
+    artistLarge.textContent = sound.user?.username || 'URC';
+    
+    // Update metadata
+    let metadataHTML = '';
+    if (sound.description) {
+        metadataHTML += `<div><strong>Description:</strong> ${sound.description.substring(0, 200)}${sound.description.length > 200 ? '...' : ''}</div>`;
+    }
+    if (sound.duration) {
+        const minutes = Math.floor(sound.duration / 60000);
+        const seconds = Math.floor((sound.duration % 60000) / 1000);
+        metadataHTML += `<div><strong>Duration:</strong> ${minutes}:${seconds.toString().padStart(2, '0')}</div>`;
+    }
+    if (sound.created_at) {
+        const date = new Date(sound.created_at);
+        metadataHTML += `<div><strong>Released:</strong> ${date.toLocaleDateString()}</div>`;
+    }
+    if (sound.playback_count !== undefined) {
+        metadataHTML += `<div><strong>Plays:</strong> ${sound.playback_count.toLocaleString()}</div>`;
+    }
+    
+    metadata.innerHTML = metadataHTML || '<div>No additional metadata available</div>';
+    
+    // Highlight active track in playlist
+    if (sound.id) {
+        highlightActiveTrackInPlaylist(sound.id);
+    }
+}
+
+function populatePlaylistTracks() {
+    const playlistTracks = document.getElementById('playlistTracks');
+    if (!playlistTracks) return;
+    
+    playlistTracks.innerHTML = '';
+    
+    podcastEpisodes.forEach((episode, index) => {
+        const trackItem = document.createElement('div');
+        trackItem.className = 'playlist-track-item';
+        trackItem.dataset.index = index;
+        trackItem.dataset.soundcloudId = episode.id;
+        
+        const thumbnail = episode.artwork || '';
+        const duration = episode.duration ? formatDuration(episode.duration) : '';
+        
+        trackItem.innerHTML = `
+            <div class="track-thumbnail">
+                ${thumbnail ? `<img src="${thumbnail}" alt="${episode.title}">` : '<div class="artwork-placeholder" style="font-size: 12px;">URC</div>'}
+            </div>
+            <div class="track-info-small">
+                <div class="track-title-small">${episode.title}</div>
+                <div class="track-artist-small">${episode.artist}</div>
+            </div>
+            ${duration ? `<div class="track-duration">${duration}</div>` : ''}
+        `;
+        
+        trackItem.addEventListener('click', () => {
+            playSoundCloudTrack(index, episode.id);
+            closePlaylistPanel();
+        });
+        
+        playlistTracks.appendChild(trackItem);
+    });
+}
+
+function formatDuration(ms) {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function highlightActiveTrackInPlaylist(soundcloudId) {
+    const trackItems = document.querySelectorAll('.playlist-track-item');
+    trackItems.forEach(item => {
+        if (item.dataset.soundcloudId === soundcloudId?.toString()) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
 }
 
 function updateBPMDisplay(bpm) {
