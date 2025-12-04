@@ -445,15 +445,15 @@ function initMusicPlayer() {
         // Initialize display
         updateTempo();
         
-        // Apply tempo when slider changes
+        // Apply tempo when slider changes - real-time updates
         tempoSlider.addEventListener('input', () => {
-            updateTempo();
-            applyTempo();
+            updateTempo(); // This calls applyTempo() inside
         });
         
         tempoSlider.addEventListener('change', () => {
-            updateTempo();
-            applyTempo();
+            updateTempo(); // This calls applyTempo() inside
+            // Force apply one more time to ensure it sticks
+            setTimeout(() => applyTempo(), 50);
         });
     }
 
@@ -498,6 +498,20 @@ function initMusicPlayer() {
         applyTempo();
     });
     
+    audioPlayer.addEventListener('loadedmetadata', () => {
+        applyTempo();
+    });
+    
+    // Apply tempo immediately when ratechange event fires (if browser changes it)
+    audioPlayer.addEventListener('ratechange', () => {
+        // Re-apply our tempo if browser changed it
+        const pitchValue = getCurrentPitchValue();
+        const tempo = calculateTempoFromPitch(pitchValue);
+        if (Math.abs(audioPlayer.playbackRate - tempo) > 0.001) {
+            audioPlayer.playbackRate = tempo;
+        }
+    });
+    
     // Initialize BPM detection
     initBPMDetection();
 
@@ -533,14 +547,22 @@ function loadTrack(index) {
     
     // Set up audio source for BPM detection and apply tempo
     if (track.audioUrl) {
+        // Apply tempo immediately
+        applyTempo();
+        
         audioPlayer.addEventListener('loadeddata', () => {
             setupAudioSource();
-            // Apply tempo when track loads
+            // Re-apply tempo when track loads
             applyTempo();
         }, { once: true });
         
         // Also apply tempo when audio can play
         audioPlayer.addEventListener('canplay', () => {
+            applyTempo();
+        }, { once: true });
+        
+        // Apply tempo when metadata loads
+        audioPlayer.addEventListener('loadedmetadata', () => {
             applyTempo();
         }, { once: true });
     }
@@ -568,23 +590,39 @@ function getCurrentPitchValue() {
 
 // Apply tempo to audio player (internal function)
 function applyTempo() {
-    if (!audioPlayer) return;
+    if (!audioPlayer) {
+        console.warn('Audio player not available');
+        return;
+    }
     
     const pitchValue = getCurrentPitchValue();
     const tempo = calculateTempoFromPitch(pitchValue);
     
-    // Apply to HTML5 audio player if it has a source
-    if (audioPlayer.src) {
-        try {
+    // Apply to HTML5 audio player
+    try {
+        // Set playbackRate - this will slow down (pitch < 0) or speed up (pitch > 0) the audio
+        const previousRate = audioPlayer.playbackRate || 1.0;
+        audioPlayer.playbackRate = tempo;
+        
+        // Verify it was set
+        const actualRate = audioPlayer.playbackRate;
+        if (Math.abs(actualRate - tempo) > 0.001) {
+            console.warn('Playback rate mismatch. Expected:', tempo, 'Got:', actualRate);
+            // Try setting again
             audioPlayer.playbackRate = tempo;
-            console.log('Tempo applied:', tempo.toFixed(3) + 'x (pitch: ' + pitchValue + ')');
-        } catch (error) {
-            console.error('Error applying tempo:', error);
         }
+        
+        // Log when rate changes significantly
+        if (Math.abs(previousRate - tempo) > 0.001) {
+            console.log('✓ Pitch adjusted:', pitchValue, '→ Tempo:', previousRate.toFixed(3) + 'x → ' + tempo.toFixed(3) + 'x');
+        }
+    } catch (error) {
+        console.error('Error applying tempo:', error);
     }
     
-    // Note: SoundCloud widget doesn't support playbackRate
-    // Tempo control only works with HTML5 audio sources
+    // Note: SoundCloud widget doesn't support playbackRate API
+    // Tempo control works with HTML5 audio sources
+    // For SoundCloud tracks, you would need direct audio stream access
 }
 
 function togglePlayPause() {
@@ -752,6 +790,9 @@ function updateTempo() {
             tempoValue.textContent = pitchValue.toFixed(0);
         }
     }
+    
+    // Apply tempo immediately when slider changes
+    applyTempo();
     
     // Update BPM display based on tempo
     if (currentBPM) {
