@@ -51,11 +51,61 @@ let bpmDetector = null;
 let currentBPM = null;
 
 // Initialize page
+// Mobile Menu Functionality
+function initMobileMenu() {
+    const menuToggle = document.getElementById('menuToggle');
+    const menuClose = document.getElementById('menuClose');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+    function openMenu() {
+        mobileMenu.classList.add('active');
+        menuOverlay.classList.add('active');
+        menuToggle.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeMenu() {
+        mobileMenu.classList.remove('active');
+        menuOverlay.classList.remove('active');
+        menuToggle.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (menuToggle) {
+        menuToggle.addEventListener('click', openMenu);
+    }
+
+    if (menuClose) {
+        menuClose.addEventListener('click', closeMenu);
+    }
+
+    if (menuOverlay) {
+        menuOverlay.addEventListener('click', closeMenu);
+    }
+
+    // Close menu when clicking on nav links
+    mobileNavLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            setTimeout(closeMenu, 300); // Delay to allow navigation
+        });
+    });
+
+    // Close menu on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && mobileMenu.classList.contains('active')) {
+            closeMenu();
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     setupCategoryButtons();
     setupNavigation();
     fetchSoundCloudPlaylist();
     initMusicPlayer();
+    initMobileMenu();
     
     // Update play button when audio starts/stops
     const audioPlayer = document.getElementById('audioPlayer');
