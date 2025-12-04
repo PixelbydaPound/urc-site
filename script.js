@@ -364,15 +364,15 @@ function loadPodcastEpisodes() {
     episodesContainer.innerHTML = '';
     
     // Define custom order mapping:
-    // Final order: Francula=0, Victor=1, 4niq=2, Yeppec=3 (moved to where Samuel Tagger was), Samuel Tagger=4 (moved to where 4niq was)
+    // Final order: Francula=0, Victor=1, Yeppec=2, Samuel Tagger=3, 4niq=4
     const orderMapping = {
         'francula': 0,
         'victor': 1,
-        '4niq': 2,  // 4niq moves to position 2 (where Yeppec was)
-        'yeppec': 3,  // Yeppec goes to position 3 (where Samuel Tagger was)
-        'samuel tagger': 4,  // Samuel Tagger goes to position 4 (where 4niq was)
-        'samuel': 4,  // Also check for just "samuel"
-        'tagger': 4  // Also check for "tagger"
+        'yeppec': 2,
+        'samuel tagger': 3,
+        'samuel': 3,  // Also check for just "samuel"
+        'tagger': 3,  // Also check for "tagger"
+        '4niq': 4
     };
     
     // Helper function to find episode order index
