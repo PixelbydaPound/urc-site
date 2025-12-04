@@ -497,8 +497,8 @@ footer {
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: var(--bg-color);
-    border-top: var(--border-width) solid var(--accent-color);
+    background-color: #000000;
+    border-top: var(--border-width) solid #ffffff;
     z-index: 1000;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }
@@ -556,27 +556,27 @@ footer {
 }
 
 .play-btn {
-    border: var(--border-width) solid var(--accent-color);
+    border: var(--border-width) solid #ffffff;
     width: 40px;
     height: 40px;
     border-radius: 0;
-    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--accent-color);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 #ffffff;
 }
 
 .play-btn:hover {
     transform: translate(-2px, -2px);
-    box-shadow: calc(var(--shadow-offset) + 2px) calc(var(--shadow-offset) + 2px) 0 0 var(--accent-color);
+    box-shadow: calc(var(--shadow-offset) + 2px) calc(var(--shadow-offset) + 2px) 0 0 #ffffff;
 }
 
 .play-btn:active {
     transform: translate(0, 0);
-    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--accent-color);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 #ffffff;
 }
 
 .player-thumbnail {
     width: 50px;
     height: 50px;
-    border: var(--border-width) solid var(--accent-color);
+    border: var(--border-width) solid #ffffff;
     background-color: #e0e0e0;
     display: flex;
     align-items: center;
@@ -640,7 +640,7 @@ footer {
     background: #e0e0e0;
     outline: none;
     cursor: pointer;
-    border: var(--border-width) solid var(--accent-color);
+    border: var(--border-width) solid #ffffff;
 }
 
 .volume-slider::-webkit-slider-thumb {
@@ -648,19 +648,19 @@ footer {
     appearance: none;
     width: 12px;
     height: 12px;
-    background: var(--accent-color);
+    background: #ffffff;
     cursor: pointer;
-    border: var(--border-width) solid var(--accent-color);
-    box-shadow: 1px 1px 0 0 var(--accent-color);
+    border: var(--border-width) solid #ffffff;
+    box-shadow: 1px 1px 0 0 #ffffff;
 }
 
 .volume-slider::-moz-range-thumb {
     width: 12px;
     height: 12px;
-    background: var(--accent-color);
+    background: #ffffff;
     cursor: pointer;
-    border: var(--border-width) solid var(--accent-color);
-    box-shadow: 1px 1px 0 0 var(--accent-color);
+    border: var(--border-width) solid #ffffff;
+    box-shadow: 1px 1px 0 0 #ffffff;
 }
 
 .volume-icon,
@@ -673,8 +673,8 @@ footer {
     align-items: center;
     gap: 15px;
     padding: 0 10px;
-    border-left: var(--border-width) solid var(--accent-color);
-    border-right: var(--border-width) solid var(--accent-color);
+    border-left: var(--border-width) solid #ffffff;
+    border-right: var(--border-width) solid #ffffff;
 }
 
 .bpm-display {
@@ -1030,10 +1030,10 @@ footer {
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: var(--border-width) solid var(--accent-color);
+    border-bottom: var(--border-width) solid #ffffff;
     position: sticky;
     top: 0;
-    background-color: var(--bg-color);
+    background-color: #000000;
     z-index: 10;
 }
 

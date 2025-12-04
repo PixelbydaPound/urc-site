@@ -59,8 +59,8 @@ class StarTunnel {
         this.stars = [];
         for (let i = 0; i < this.density; i++) {
             this.stars.push({
-                x: (Math.random() - 0.5) * 2,
-                y: (Math.random() - 0.5) * 2,
+                x: (Math.random() - 0.5) * 4, // Wider range: -2 to +2 (was -1 to +1)
+                y: (Math.random() - 0.5) * 4, // Wider range: -2 to +2 (was -1 to +1)
                 z: Math.random(),
                 size: Math.random() * 2 + 0.5,
                 brightness: Math.random() * 0.5 + 0.5,
