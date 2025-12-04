@@ -201,6 +201,8 @@ header {
     cursor: pointer;
     transition: opacity 0.2s;
     user-select: none;
+    text-transform: none;
+    letter-spacing: normal;
 }
 
 .utility-item:hover {
@@ -1113,6 +1115,115 @@ footer {
     body {
         padding-bottom: 90px;
     }
+}
+
+/* Navigation Menu Sidebar */
+.nav-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.nav-menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.nav-menu {
+    position: fixed;
+    top: 0;
+    left: -400px;
+    width: 400px;
+    height: 100vh;
+    background-color: #ffffff;
+    border-right: var(--border-width) solid var(--accent-color);
+    box-shadow: var(--shadow-offset) 0 0 0 var(--accent-color);
+    z-index: 1000;
+    transition: left 0.3s ease;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-menu.active {
+    left: 0;
+}
+
+.nav-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: var(--border-width) solid var(--accent-color);
+    position: sticky;
+    top: 0;
+    background-color: #ffffff;
+    z-index: 10;
+}
+
+.nav-menu-header h2 {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 0;
+    color: var(--text-color);
+}
+
+.nav-menu-close {
+    background: none;
+    border: var(--border-width) solid var(--accent-color);
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--accent-color);
+}
+
+.nav-menu-close:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: calc(var(--shadow-offset) + 2px) calc(var(--shadow-offset) + 2px) 0 0 var(--accent-color);
+}
+
+.nav-menu-close svg {
+    stroke: var(--accent-color);
+}
+
+.nav-menu-content {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+}
+
+.nav-menu-link {
+    font-family: var(--font-body);
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--text-color);
+    text-decoration: underline;
+    text-decoration-color: var(--accent-color);
+    text-underline-offset: 4px;
+    padding: 20px;
+    border-bottom: var(--border-width) solid var(--accent-color);
+    text-transform: lowercase;
+    letter-spacing: normal;
+    transition: background-color 0.2s;
+    display: block;
+}
+
+.nav-menu-link:hover {
+    background-color: #f0f0f0;
 }
 
 /* Playlist Slide-out Panel */
