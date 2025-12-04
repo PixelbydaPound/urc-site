@@ -1265,4 +1265,3 @@ if (audioPlayer) {
     audioPlayer.addEventListener('play', applyTempo);
     audioPlayer.addEventListener('loadedmetadata', applyTempo);
 }
-
