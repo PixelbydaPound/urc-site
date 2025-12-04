@@ -363,8 +363,17 @@ function loadPodcastEpisodes() {
     
     episodesContainer.innerHTML = '';
     
-    // Define the desired order: Francula, Victor, Yeppec, Tagger, 4niq
-    const episodeOrder = ['francula', 'victor', 'yeppec', 'tagger', '4niq'];
+    // Define custom order mapping:
+    // Final order: Francula=0, Victor=1, 4niq=2, Yeppec=3 (moved to where Samuel Tagger was), Samuel Tagger=4 (moved to where 4niq was)
+    const orderMapping = {
+        'francula': 0,
+        'victor': 1,
+        '4niq': 2,  // 4niq moves to position 2 (where Yeppec was)
+        'yeppec': 3,  // Yeppec goes to position 3 (where Samuel Tagger was)
+        'samuel tagger': 4,  // Samuel Tagger goes to position 4 (where 4niq was)
+        'samuel': 4,  // Also check for just "samuel"
+        'tagger': 4  // Also check for "tagger"
+    };
     
     // Helper function to find episode order index
     function getEpisodeOrderIndex(episode) {
@@ -372,13 +381,14 @@ function loadPodcastEpisodes() {
         const artistLower = (episode.artist || '').toLowerCase();
         const searchText = titleLower + ' ' + artistLower;
         
-        for (let i = 0; i < episodeOrder.length; i++) {
-            if (searchText.includes(episodeOrder[i])) {
-                return i;
+        // Check for each episode name in order mapping
+        for (const [name, order] of Object.entries(orderMapping)) {
+            if (searchText.includes(name)) {
+                return order;
             }
         }
         // If not found, put at end
-        return episodeOrder.length;
+        return 10;
     }
     
     // Create array with original index and sort by custom order
@@ -388,7 +398,7 @@ function loadPodcastEpisodes() {
         orderIndex: getEpisodeOrderIndex(episode)
     }));
     
-    // Sort by order index (Francula=0, Victor=1, Yeppec=2, Tagger=3, 4niq=4)
+    // Sort by order index
     episodesWithIndex.sort((a, b) => a.orderIndex - b.orderIndex);
     
     // Display episodes in the sorted order
