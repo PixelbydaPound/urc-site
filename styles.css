@@ -48,6 +48,17 @@
     font-display: swap;
 }
 
+@font-face {
+    font-family: 'Kastro';
+    src: url('fonts/Kastro.woff2') format('woff2'),
+         url('fonts/Kastro.woff') format('woff'),
+         url('fonts/kastro.woff2') format('woff2'),
+         url('fonts/kastro.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -55,13 +66,14 @@
 }
 
 :root {
-    --bg-color: #000000;
-    --text-color: #ffffff;
-    --accent-color: #ffffff;
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --accent-color: #000000;
     --border-width: 2px;
     --shadow-offset: 4px;
     --font-heading: 'Monument Grotesk', 'A. Monument Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     --font-body: 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-kastro: 'Kastro', 'Monument Grotesk', 'A. Monument Grotesk', sans-serif;
 }
 
 /* Typography */
@@ -85,7 +97,7 @@ body {
 }
 
 header {
-    background-color: #000000;
+    background-color: #ffffff;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -97,7 +109,7 @@ header {
     align-items: center;
     gap: 30px;
     padding: 12px 20px;
-    border-bottom: var(--border-width) solid rgba(255, 255, 255, 0.1);
+    border-bottom: var(--border-width) solid var(--accent-color);
     max-width: 1200px;
     margin: 0 auto;
 }
@@ -109,7 +121,7 @@ header {
     font-family: var(--font-body);
     font-size: 12px;
     font-weight: 400;
-    color: #ffffff;
+    color: var(--text-color);
     cursor: pointer;
     transition: opacity 0.2s;
     user-select: none;
@@ -168,7 +180,7 @@ nav {
 
 .nav-links a {
     font-family: 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    color: #ffffff;
+    color: var(--text-color);
     text-decoration: none;
     font-weight: 600;
     font-size: 14px;
@@ -192,14 +204,16 @@ main {
 .hero {
     position: relative;
     text-align: center;
-    padding: 80px 20px;
-    margin-bottom: 60px;
+    padding: 80px 40px;
+    margin: 60px 20px;
     min-height: 70vh;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: #000000;
+    background: #ffffff;
+    border: var(--border-width) solid var(--accent-color);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--accent-color);
 }
 
 .star-tunnel-canvas {
@@ -227,17 +241,25 @@ main {
     position: relative;
     z-index: 10;
     width: 100%;
+    padding: 0 40px;
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .slogan {
-    font-family: var(--font-heading);
+    font-family: var(--font-kastro);
     font-size: clamp(32px, 6vw, 72px);
-    font-weight: 700;
+    font-weight: normal;
     letter-spacing: -1px;
-    line-height: 1.1;
-    color: #ffffff;
+    line-height: 1.2;
+    color: var(--text-color);
     margin-bottom: 20px;
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    padding: 0 20px;
 }
 
 .hero-subtitle {
@@ -246,7 +268,7 @@ main {
     font-weight: 400;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: #ffffff;
+    color: var(--text-color);
     opacity: 0.8;
 }
 
