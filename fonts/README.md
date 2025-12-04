@@ -4,7 +4,15 @@ Place your font files here:
 
 ## Required Fonts:
 
-### Monument Grotesk (H1 Headings)
+### Neue Machina (H1 Headings)
+- `NeueMachina-Regular.woff2`
+- `NeueMachina-Regular.woff`
+- `NeueMachina-Bold.woff2`
+- `NeueMachina-Bold.woff`
+
+**Fallback:** Courier New → Monaco → monospace (techno-industrial aesthetic)
+
+### Monument Grotesk Regular (Body + Menu)
 - `MonumentGrotesk-Regular.woff2`
 - `MonumentGrotesk-Regular.woff`
 - `MonumentGrotesk-Bold.woff2`
@@ -12,31 +20,27 @@ Place your font files here:
 
 **Fallback:** Also accepts `AMonumentGrotesk-*` files if Monument Grotesk files are not available.
 
-### Neue Haas Grotesk (Body + Menu)
-- `NeueHaasGrotesk-Roman.woff2` (Regular)
-- `NeueHaasGrotesk-Roman.woff` (Regular)
-- `NeueHaasGrotesk-Medium.woff2` (Medium weight)
-- `NeueHaasGrotesk-Medium.woff` (Medium weight)
-- `NeueHaasGrotesk-Bold.woff2` (Bold)
-- `NeueHaasGrotesk-Bold.woff` (Bold)
-
-**Fallback:** Uses Helvetica Neue (system font) if font files are not available.
-
 ## Font Sources:
 
+- **Neue Machina**: Available from various font foundries (techno-industrial font)
 - **Monument Grotesk**: Available from various font foundries
-- **Neue Haas Grotesk**: Available from font foundries or use system Helvetica Neue
 
 ## Typography Usage:
 
-- **H1**: Monument Grotesk
-- **H2-H6**: Monument Grotesk (with fallbacks)
-- **Body text**: Neue Haas Grotesk
-- **Navigation/Menu**: Neue Haas Grotesk
+- **H1**: Neue Machina (techno-industrial, sci-fi aesthetic)
+- **H2-H6**: Neue Machina
+- **Body text**: Monument Grotesk Regular
+- **Navigation/Menu**: Monument Grotesk Regular
+
+## Design Rationale:
+
+This typography combination creates a **techno-industrial** aesthetic that matches URC's sci-fi identity:
+- Neue Machina provides a futuristic, digital feel for headings
+- Monument Grotesk Regular offers clean readability for body text
+- Together they create a modern, sci-fi inspired look
 
 ## Note:
 
 If font files are not available, the site will fallback to:
-- Monument Grotesk → Helvetica Neue → Helvetica → Arial
-- Neue Haas Grotesk → Helvetica Neue → Helvetica → Arial
-
+- Neue Machina → Courier New → Monaco → monospace
+- Monument Grotesk → A. Monument Grotesk → Helvetica Neue → Helvetica → Arial
