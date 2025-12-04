@@ -236,44 +236,35 @@ function showProducts(category) {
             </div>
         `;
         
-        // Make entire card clickable to go to product detail page
-        productCard.style.cursor = 'pointer';
-        productCard.addEventListener('click', (e) => {
-            // Don't navigate if clicking the button
-            if (!e.target.closest('.add-to-cart-btn')) {
-                window.location.href = `product.html?id=${product.id}&category=${category}`;
-            }
-        });
-        
-        // Add click handler for add to cart (stops propagation to prevent navigation)
+        // Add click handler for add to cart
         const addToCartBtn = productCard.querySelector('.add-to-cart-btn');
-        if (addToCartBtn) {
-            addToCartBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                addToCart(product.id);
-            });
-        }
+        addToCartBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            addToCart(product.id);
+        });
         
         productsGrid.appendChild(productCard);
     });
     
     // Scroll to products section if on main page
     const productsSection = document.querySelector('.products-section');
-    if (productsSection && (window.location.pathname === '/' || window.location.pathname.includes('index.html'))) {
+    if (productsSection && window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
         setTimeout(() => {
             productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
     }
 }
 
-function addToCart(productId) {
+function addToCart(productId, quantity = 1) {
     // Simple cart functionality
     let cart = JSON.parse(localStorage.getItem('urcCart') || '[]');
     const product = Object.values(products).flat().find(p => p.id === productId);
     
     if (product) {
-        cart.push(product);
+        // Add quantity copies
+        for (let i = 0; i < quantity; i++) {
+            cart.push({...product, quantity: 1});
+        }
         localStorage.setItem('urcCart', JSON.stringify(cart));
         
         // Update cart count
@@ -283,7 +274,154 @@ function addToCart(productId) {
         }
         
         // Show feedback (you can enhance this with a toast notification)
-        console.log(`Added ${product.name} to cart`);
+        console.log(`Added ${quantity}x ${product.name} to cart`);
+    }
+}
+
+// Load product detail page
+function loadProductDetail() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = parseInt(urlParams.get('id'));
+    const category = urlParams.get('category') || 'records';
+    
+    if (!productId) {
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    const product = products[category]?.find(p => p.id === productId);
+    if (!product) {
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    // Update breadcrumb
+    const categoryLink = document.getElementById('categoryLink');
+    const productNameBreadcrumb = document.getElementById('productNameBreadcrumb');
+    if (categoryLink) {
+        const categoryName = category === 'zines' ? 'zines' : category === 'merchandise' ? 'merchandise' : 'records';
+        categoryLink.textContent = categoryName.toUpperCase();
+        categoryLink.href = `${categoryName === 'zines' ? 'zines' : categoryName === 'merchandise' ? 'merchandise' : 'records'}.html`;
+    }
+    if (productNameBreadcrumb) {
+        productNameBreadcrumb.textContent = product.name;
+    }
+    
+    // Update product title
+    const titleEl = document.getElementById('productDetailTitle');
+    if (titleEl) {
+        titleEl.textContent = product.name;
+    }
+    
+    // Update product image
+    const imageEl = document.getElementById('productImageLarge');
+    if (imageEl) {
+        if (product.image) {
+            imageEl.innerHTML = `<img src="${product.image}" alt="${product.name}" />`;
+        } else {
+            imageEl.innerHTML = `<div class="product-image-placeholder">${product.name}</div>`;
+        }
+    }
+    
+    // Update price
+    const priceEl = document.getElementById('productPriceLarge');
+    if (priceEl) {
+        priceEl.textContent = product.price;
+    }
+    
+    // Update format selector
+    const formatSelector = document.getElementById('formatSelector');
+    if (formatSelector) {
+        const formats = product.formats || [{ name: category === 'zines' ? 'Print' : category === 'merchandise' ? 'Standard' : '12" Vinyl', price: product.price }];
+        formatSelector.innerHTML = '';
+        formats.forEach((format, index) => {
+            const formatBtn = document.createElement('button');
+            formatBtn.className = 'format-btn' + (index === 0 ? ' active' : '');
+            formatBtn.textContent = format.name;
+            formatBtn.dataset.price = format.price || product.price;
+            formatBtn.addEventListener('click', () => {
+                document.querySelectorAll('.format-btn').forEach(btn => btn.classList.remove('active'));
+                formatBtn.classList.add('active');
+                if (priceEl) {
+                    priceEl.textContent = formatBtn.dataset.price;
+                }
+            });
+            formatSelector.appendChild(formatBtn);
+        });
+    }
+    
+    // Quantity selector
+    const quantityInput = document.getElementById('quantityInput');
+    const quantityDecrease = document.getElementById('quantityDecrease');
+    const quantityIncrease = document.getElementById('quantityIncrease');
+    
+    if (quantityDecrease) {
+        quantityDecrease.addEventListener('click', () => {
+            const current = parseInt(quantityInput.value) || 1;
+            if (current > 1) {
+                quantityInput.value = current - 1;
+            }
+        });
+    }
+    
+    if (quantityIncrease) {
+        quantityIncrease.addEventListener('click', () => {
+            const current = parseInt(quantityInput.value) || 1;
+            quantityInput.value = current + 1;
+        });
+    }
+    
+    // Add to cart button
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', () => {
+            const quantity = parseInt(quantityInput.value) || 1;
+            addToCart(productId, quantity);
+            // Visual feedback
+            addToCartBtn.textContent = 'ADDED';
+            setTimeout(() => {
+                addToCartBtn.textContent = 'ADD TO CART';
+            }, 2000);
+        });
+    }
+    
+    // Update description
+    const descriptionEl = document.getElementById('productDescription');
+    if (descriptionEl) {
+        descriptionEl.innerHTML = product.description || `<p>${product.name} - Available now via Underrated Art Creations.</p>`;
+    }
+    
+    // Update track previews - only show for records category
+    const trackPreviews = document.getElementById('trackPreviews');
+    if (trackPreviews) {
+        if (category === 'records' && product.tracks && product.tracks.length > 0) {
+            trackPreviews.style.display = 'block';
+            const previewTracksList = document.getElementById('previewTracksList');
+            if (previewTracksList) {
+                previewTracksList.innerHTML = '';
+                product.tracks.forEach((track, index) => {
+                    const trackItem = document.createElement('div');
+                    trackItem.className = 'preview-track-item';
+                    trackItem.innerHTML = `
+                        <div class="track-info">
+                            <span class="track-number">${track.position}</span>
+                            <span class="track-name">${track.name}</span>
+                        </div>
+                        <div class="track-player">
+                            ${track.previewUrl ? `
+                                <audio controls class="track-audio">
+                                    <source src="${track.previewUrl}" type="audio/mpeg">
+                                </audio>
+                            ` : '<span class="no-preview">No preview available</span>'}
+                        </div>
+                    `;
+                    previewTracksList.appendChild(trackItem);
+                });
+            }
+        } else {
+            // Hide track previews for zines and merchandise
+            trackPreviews.style.display = 'none';
+        }
     }
 }
 
