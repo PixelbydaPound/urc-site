@@ -64,7 +64,7 @@ class StarTunnel {
                 z: Math.random(),
                 size: Math.random() * 2 + 0.5,
                 brightness: Math.random() * 0.5 + 0.5,
-                speed: (Math.random() * 0.02 + 0.01) * this.speed
+                speed: (Math.random() * 0.003 + 0.001) * this.speed
             });
         }
     }
@@ -181,7 +181,7 @@ let starTunnelInstance = null;
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('starTunnelCanvas')) {
         starTunnelInstance = new StarTunnel({
-            speed: 1.0,
+            speed: 0.15, // Very slow movement
             density: 300,
             interactive: true,
             noise: true
