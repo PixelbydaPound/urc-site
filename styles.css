@@ -51,9 +51,7 @@
 @font-face {
     font-family: 'Kastro';
     src: url('fonts/Kastro.woff2') format('woff2'),
-         url('fonts/Kastro.woff') format('woff'),
-         url('fonts/kastro.woff2') format('woff2'),
-         url('fonts/kastro.woff') format('woff');
+         url('fonts/Kastro.woff') format('woff');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -1237,4 +1235,3 @@ footer {
         right: -100%;
     }
 }
-
