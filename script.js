@@ -236,12 +236,24 @@ function showProducts(category) {
             </div>
         `;
         
-        // Add click handler for add to cart
-        const addToCartBtn = productCard.querySelector('.add-to-cart-btn');
-        addToCartBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            addToCart(product.id);
+        // Make entire card clickable to go to product detail page
+        productCard.style.cursor = 'pointer';
+        productCard.addEventListener('click', (e) => {
+            // Don't navigate if clicking the button
+            if (!e.target.closest('.add-to-cart-btn')) {
+                window.location.href = `product.html?id=${product.id}&category=${category}`;
+            }
         });
+        
+        // Add click handler for add to cart (stops propagation to prevent navigation)
+        const addToCartBtn = productCard.querySelector('.add-to-cart-btn');
+        if (addToCartBtn) {
+            addToCartBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                addToCart(product.id);
+            });
+        }
         
         productsGrid.appendChild(productCard);
     });
