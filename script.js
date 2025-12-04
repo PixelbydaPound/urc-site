@@ -100,12 +100,80 @@ function initNavMenu() {
     });
 }
 
+// Scroll reveal functionality
+function initScrollReveal() {
+    const scrollIndicator = document.querySelector('.scroll-indicator');
+    const shopSection = document.getElementById('records');
+    const podcastSection = document.getElementById('podcast');
+    let hasScrolled = false;
+
+    // Show sections when user scrolls
+    function handleScroll() {
+        const scrollY = window.scrollY || window.pageYOffset;
+        const revealPoint = window.innerHeight * 0.3;
+
+        if (!hasScrolled && scrollY > revealPoint) {
+            hasScrolled = true;
+            
+            // Hide scroll indicator with fade
+            if (scrollIndicator) {
+                scrollIndicator.style.transition = 'opacity 0.5s ease-out';
+                scrollIndicator.style.opacity = '0';
+                setTimeout(() => {
+                    scrollIndicator.style.display = 'none';
+                }, 500);
+            }
+            
+            // Reveal shop section
+            if (shopSection) {
+                shopSection.style.display = 'block';
+                shopSection.style.visibility = 'visible';
+                setTimeout(() => {
+                    shopSection.classList.add('revealed');
+                }, 100);
+            }
+        }
+    }
+
+    // Click scroll indicator to scroll down
+    if (scrollIndicator) {
+        scrollIndicator.addEventListener('click', () => {
+            const targetScroll = window.innerHeight * 0.8;
+            window.scrollTo({
+                top: targetScroll,
+                behavior: 'smooth'
+            });
+        });
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Also trigger on initial load if already scrolled
+    handleScroll();
+}
+
+// Add fade-in animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+`;
+document.head.appendChild(style);
+
 document.addEventListener('DOMContentLoaded', () => {
     setupCategoryButtons();
     setupNavigation();
     fetchSoundCloudPlaylist();
     initMusicPlayer();
     initNavMenu();
+    initScrollReveal();
     
     // Update play button when audio starts/stops
     const audioPlayer = document.getElementById('audioPlayer');
