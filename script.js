@@ -363,7 +363,14 @@ function loadPodcastEpisodes() {
     
     episodesContainer.innerHTML = '';
     
-    podcastEpisodes.forEach((episode, index) => {
+    // Reverse the array so most recent (5) appears first at top left
+    // Create a reversed copy to maintain original index mapping
+    const reversedEpisodes = [...podcastEpisodes].reverse();
+    
+    reversedEpisodes.forEach((episode, displayIndex) => {
+        // Calculate original index (before reversal) for correct track mapping
+        const originalIndex = podcastEpisodes.length - 1 - displayIndex;
+        
         const episodeCard = document.createElement('div');
         episodeCard.className = 'podcast-episode';
         
@@ -379,7 +386,7 @@ function loadPodcastEpisodes() {
                 ${artworkUrl ? `<img src="${artworkUrl}" alt="${episode.title}" />` : '<div class="podcast-episode-artwork-placeholder">URC</div>'}
             </div>
             <h3>${episode.title}</h3>
-            <button class="brutal-btn play-episode-btn" data-index="${index}" data-permalink="${episode.permalink || ''}" data-soundcloud-id="${episode.id}">
+            <button class="brutal-btn play-episode-btn" data-index="${originalIndex}" data-permalink="${episode.permalink || ''}" data-soundcloud-id="${episode.id}">
                 PLAY
             </button>
         `;
