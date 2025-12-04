@@ -706,8 +706,8 @@ footer {
     gap: 5px;
     padding: 8px 12px;
     background: #2a2a2a;
-    border: var(--border-width) solid var(--accent-color);
-    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--accent-color);
+    border: var(--border-width) solid #ffffff;
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 #ffffff;
 }
 
 .pitch-label {
@@ -1048,20 +1048,20 @@ footer {
 
 .playlist-close-btn {
     background: none;
-    border: var(--border-width) solid var(--accent-color);
-    color: var(--text-color);
+    border: var(--border-width) solid #ffffff;
+    color: #ffffff;
     cursor: pointer;
     padding: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: transform 0.2s;
-    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--accent-color);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 #ffffff;
 }
 
 .playlist-close-btn:hover {
     transform: translate(-2px, -2px);
-    box-shadow: calc(var(--shadow-offset) + 2px) calc(var(--shadow-offset) + 2px) 0 0 var(--accent-color);
+    box-shadow: calc(var(--shadow-offset) + 2px) calc(var(--shadow-offset) + 2px) 0 0 #ffffff;
 }
 
 .playlist-content {
@@ -1072,19 +1072,19 @@ footer {
 .current-track-info {
     margin-bottom: 40px;
     padding-bottom: 30px;
-    border-bottom: var(--border-width) solid var(--accent-color);
+    border-bottom: var(--border-width) solid #ffffff;
 }
 
 .track-artwork-large {
     width: 100%;
     aspect-ratio: 1;
-    border: var(--border-width) solid var(--accent-color);
+    border: var(--border-width) solid #ffffff;
     background-color: #e0e0e0;
     margin-bottom: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--accent-color);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 #ffffff;
     overflow: hidden;
 }
 
