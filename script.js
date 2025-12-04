@@ -102,9 +102,7 @@ function initNavMenu() {
 
 // Scroll reveal functionality
 function initScrollReveal() {
-    const scrollIndicator = document.querySelector('.scroll-indicator');
     const shopSection = document.getElementById('records');
-    const podcastSection = document.getElementById('podcast');
     let hasScrolled = false;
 
     // Show sections when user scrolls
@@ -115,15 +113,6 @@ function initScrollReveal() {
         if (!hasScrolled && scrollY > revealPoint) {
             hasScrolled = true;
             
-            // Hide scroll indicator with fade
-            if (scrollIndicator) {
-                scrollIndicator.style.transition = 'opacity 0.5s ease-out';
-                scrollIndicator.style.opacity = '0';
-                setTimeout(() => {
-                    scrollIndicator.style.display = 'none';
-                }, 500);
-            }
-            
             // Reveal shop section
             if (shopSection) {
                 shopSection.style.display = 'block';
@@ -133,17 +122,6 @@ function initScrollReveal() {
                 }, 100);
             }
         }
-    }
-
-    // Click scroll indicator to scroll down
-    if (scrollIndicator) {
-        scrollIndicator.addEventListener('click', () => {
-            const targetScroll = window.innerHeight * 0.8;
-            window.scrollTo({
-                top: targetScroll,
-                behavior: 'smooth'
-            });
-        });
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -389,7 +367,17 @@ function loadPodcastEpisodes() {
         const episodeCard = document.createElement('div');
         episodeCard.className = 'podcast-episode';
         
+        // Get artwork URL - use large size if available
+        let artworkUrl = '';
+        if (episode.artwork) {
+            // Replace 'large' with 't500x500' for better quality, or use original
+            artworkUrl = episode.artwork.replace('large', 't500x500') || episode.artwork;
+        }
+        
         episodeCard.innerHTML = `
+            <div class="podcast-episode-artwork">
+                ${artworkUrl ? `<img src="${artworkUrl}" alt="${episode.title}" />` : '<div class="podcast-episode-artwork-placeholder">URC</div>'}
+            </div>
             <h3>${episode.title}</h3>
             <button class="brutal-btn play-episode-btn" data-index="${index}" data-permalink="${episode.permalink || ''}" data-soundcloud-id="${episode.id}">
                 PLAY
