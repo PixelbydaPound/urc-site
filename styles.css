@@ -271,16 +271,14 @@ main {
 .hero {
     position: relative;
     text-align: center;
-    padding: 80px 40px;
-    margin: 60px 20px;
-    min-height: 70vh;
+    padding: 20px 40px 80px 40px;
+    margin: 0;
+    min-height: 60vh;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     background: #ffffff;
-    border: var(--border-width) solid var(--accent-color);
-    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--accent-color);
 }
 
 .star-tunnel-canvas {
