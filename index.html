@@ -50,11 +50,15 @@
 
     <main>
         <section class="hero">
-            <div class="logo-container">
-                <img src="URCLogo.png" alt="URC Logo" class="hero-logo">
+            <canvas id="starTunnelCanvas" class="star-tunnel-canvas"></canvas>
+            <canvas id="noiseCanvas" class="noise-canvas"></canvas>
+            <div class="hero-content">
+                <div class="logo-container">
+                    <img src="URCLogo.png" alt="URC Logo" class="hero-logo">
+                </div>
+                <h1 class="slogan">Welcome to the 4th Dimension</h1>
+                <p class="hero-subtitle">Underrated Art Creations</p>
             </div>
-            <h1 class="slogan">Welcome to the 4th Dimension</h1>
-            <p class="hero-subtitle">Underrated Art Creations</p>
         </section>
 
         <section id="shop" class="shop-section">
@@ -228,6 +232,7 @@
     <div class="playlist-overlay" id="playlistOverlay"></div>
 
     <script src="https://w.soundcloud.com/player/api.js"></script>
+    <script src="starTunnel.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
