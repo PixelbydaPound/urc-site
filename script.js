@@ -145,7 +145,17 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// Initialize cart count
+function initCart() {
+    const cart = JSON.parse(localStorage.getItem('urcCart') || '[]');
+    const cartCount = document.getElementById('cartCount');
+    if (cartCount) {
+        cartCount.textContent = cart.length;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    initCart();
     setupCategoryButtons();
     setupNavigation();
     fetchSoundCloudPlaylist();
@@ -168,8 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupCategoryButtons() {
-    const buttons = document.querySelectorAll('.brutal-btn');
+    // Only set up category buttons on index page, not on product pages
+    const buttons = document.querySelectorAll('.category-card .brutal-btn');
     buttons.forEach((button, index) => {
+        // Skip if it's already a link
+        if (button.tagName === 'A') return;
+        
         button.addEventListener('click', () => {
             const categories = ['records', 'zines', 'merchandise'];
             showProducts(categories[index]);
@@ -200,28 +214,65 @@ function showProducts(category) {
     productsGrid.innerHTML = '';
     
     if (categoryProducts.length === 0) {
-        productsGrid.innerHTML = '<p>No products available in this category.</p>';
+        productsGrid.innerHTML = '<p style="color: #ffffff; text-align: center; grid-column: 1 / -1;">No products available in this category.</p>';
         return;
     }
     
     categoryProducts.forEach(product => {
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
+        
+        // Create image placeholder or use product image if available
+        const imageHtml = product.image 
+            ? `<img src="${product.image}" alt="${product.name}" />`
+            : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3); font-size: 14px;">${product.name}</div>`;
+        
         productCard.innerHTML = `
-            <div class="product-image">[IMAGE]</div>
+            <div class="product-image">${imageHtml}</div>
             <div class="product-info">
                 <h4>${product.name}</h4>
                 <p class="product-price">${product.price}</p>
-                <button class="brutal-btn">ADD TO CART</button>
+                <button class="brutal-btn add-to-cart-btn" data-product-id="${product.id}">ADD TO CART</button>
             </div>
         `;
+        
+        // Add click handler for add to cart
+        const addToCartBtn = productCard.querySelector('.add-to-cart-btn');
+        addToCartBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            addToCart(product.id);
+        });
+        
         productsGrid.appendChild(productCard);
     });
     
-    // Scroll to products section
-    setTimeout(() => {
-        document.querySelector('.products-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+    // Scroll to products section if on main page
+    const productsSection = document.querySelector('.products-section');
+    if (productsSection && window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
+        setTimeout(() => {
+            productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+}
+
+function addToCart(productId) {
+    // Simple cart functionality
+    let cart = JSON.parse(localStorage.getItem('urcCart') || '[]');
+    const product = Object.values(products).flat().find(p => p.id === productId);
+    
+    if (product) {
+        cart.push(product);
+        localStorage.setItem('urcCart', JSON.stringify(cart));
+        
+        // Update cart count
+        const cartCount = document.getElementById('cartCount');
+        if (cartCount) {
+            cartCount.textContent = cart.length;
+        }
+        
+        // Show feedback (you can enhance this with a toast notification)
+        console.log(`Added ${product.name} to cart`);
+    }
 }
 
 // Fetch SoundCloud Playlist
