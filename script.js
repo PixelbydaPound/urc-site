@@ -517,6 +517,21 @@ function showProducts(category) {
     
     productsGrid.innerHTML = '';
     
+    // Add zine promo image as first card if category is zines
+    if (category === 'zines') {
+        const promoCard = document.createElement('div');
+        promoCard.className = 'product-card';
+        promoCard.style.cursor = 'default'; // Make it non-clickable or link to a specific page
+        
+        promoCard.innerHTML = `
+            <div class="product-image">
+                <img src="zine-promo.jpg" alt="Zine Promo" style="width: 100%; height: 100%; object-fit: cover;" />
+            </div>
+        `;
+        
+        productsGrid.appendChild(promoCard);
+    }
+    
     if (categoryProducts.length === 0) {
         productsGrid.innerHTML = '<p style="color: #ffffff; text-align: center; grid-column: 1 / -1;">No products available in this category.</p>';
         return;
