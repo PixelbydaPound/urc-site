@@ -231,7 +231,72 @@ function restorePlayerState() {
             }
         }
         
-        // Wait for tracks to load before restoring playback
+        // Wait for tracks to load before restoring playback - check more frequently
+        // If tracks are already loaded, restore immediately
+        if (musicTracks.length > 0 && state.currentTrackIndex !== undefined) {
+            currentTrackIndex = state.currentTrackIndex;
+            const track = musicTracks[currentTrackIndex];
+            
+            if (track) {
+                // Check if it's a SoundCloud track
+                if (track.permalink && soundcloudWidget) {
+                    // Widget is ready, restore immediately
+                    sessionStorage.setItem('urcRestoringState', 'true');
+                    playSoundCloudTrack(currentTrackIndex, track.soundcloudId);
+                    
+                    // Restore playback immediately - no delay
+                    const restorePlayback = () => {
+                        if (state.isPlaying) {
+                            // Play immediately
+                            soundcloudWidget.play();
+                            isPlaying = true;
+                            if (typeof updatePlayButton === 'function') {
+                                updatePlayButton();
+                            }
+                            
+                            // Restore position
+                            if (state.currentTime > 0) {
+                                soundcloudWidget.getDuration((duration) => {
+                                    if (duration && state.currentTime < duration) {
+                                        soundcloudWidget.seekTo(state.currentTime * 1000);
+                                    }
+                                });
+                            }
+                            sessionStorage.removeItem('urcRestoringState');
+                        } else {
+                            sessionStorage.removeItem('urcRestoringState');
+                        }
+                    };
+                    
+                    // Try to restore immediately (widget might already be ready)
+                    restorePlayback();
+                    
+                    // Also listen for READY event in case widget isn't ready yet
+                    soundcloudWidget.bind(window.SC.Widget.Events.READY, () => {
+                        restorePlayback();
+                    });
+                    return true;
+                } else if (track.audioUrl && audioPlayer) {
+                    loadTrack(currentTrackIndex);
+                    if (state.currentTime > 0) {
+                        audioPlayer.addEventListener('loadedmetadata', () => {
+                            if (state.currentTime < audioPlayer.duration) {
+                                audioPlayer.currentTime = state.currentTime;
+                            }
+                        }, { once: true });
+                    }
+                    if (state.isPlaying) {
+                        setTimeout(() => {
+                            audioPlayer.play().catch(e => {
+                                console.log('Auto-resume prevented:', e);
+                            });
+                        }, 100);
+                    }
+                    return true;
+                }
+            }
+        }
+        
         const checkTracksLoaded = setInterval(() => {
             if (musicTracks.length > 0 && state.currentTrackIndex !== undefined) {
                 clearInterval(checkTracksLoaded);
@@ -242,7 +307,7 @@ function restorePlayerState() {
                 if (track) {
                     // Check if it's a SoundCloud track
                     if (track.permalink) {
-                        // Wait for SoundCloud widget to be ready
+                        // Wait for SoundCloud widget to be ready - check more frequently
                         const checkWidget = setInterval(() => {
                             if (soundcloudWidget) {
                                 clearInterval(checkWidget);
@@ -252,38 +317,45 @@ function restorePlayerState() {
                                 
                                 playSoundCloudTrack(currentTrackIndex, track.soundcloudId);
                                 
-                                // Restore position and playing state after track loads
-                                setTimeout(() => {
-                                    if (state.currentTime > 0) {
-                                        soundcloudWidget.getDuration((duration) => {
-                                            if (duration && state.currentTime < duration) {
-                                                soundcloudWidget.seekTo(state.currentTime * 1000);
-                                            }
-                                        });
-                                    }
-                                    
-                                    // Resume playback if it was playing
+                                // Restore playback immediately - minimize latency
+                                const restorePlayback = () => {
                                     if (state.isPlaying) {
-                                        setTimeout(() => {
-                                            soundcloudWidget.play();
-                                            isPlaying = true;
-                                            if (typeof updatePlayButton === 'function') {
-                                                updatePlayButton();
-                                            }
-                                            sessionStorage.removeItem('urcRestoringState');
-                                        }, 500);
+                                        // Play immediately - no delay
+                                        soundcloudWidget.play();
+                                        isPlaying = true;
+                                        if (typeof updatePlayButton === 'function') {
+                                            updatePlayButton();
+                                        }
+                                        
+                                        // Restore position
+                                        if (state.currentTime > 0) {
+                                            soundcloudWidget.getDuration((duration) => {
+                                                if (duration && state.currentTime < duration) {
+                                                    soundcloudWidget.seekTo(state.currentTime * 1000);
+                                                }
+                                            });
+                                        }
+                                        sessionStorage.removeItem('urcRestoringState');
                                     } else {
                                         sessionStorage.removeItem('urcRestoringState');
                                     }
-                                }, 2000);
+                                };
+                                
+                                // Try to restore immediately (widget might be ready)
+                                restorePlayback();
+                                
+                                // Also listen for READY event for immediate restoration
+                                soundcloudWidget.bind(window.SC.Widget.Events.READY, () => {
+                                    restorePlayback();
+                                });
                             }
-                        }, 100);
+                        }, 50); // Check every 50ms instead of 100ms
                         
-                        // Timeout after 15 seconds
+                        // Timeout after 10 seconds
                         setTimeout(() => {
                             clearInterval(checkWidget);
                             sessionStorage.removeItem('urcRestoringState');
-                        }, 15000);
+                        }, 10000);
                     } else if (track.audioUrl && audioPlayer) {
                         loadTrack(currentTrackIndex);
                         if (state.currentTime > 0) {
@@ -337,18 +409,31 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavMenu();
     initScrollReveal();
     
-    // Restore player state from previous page
-    // Wait longer to ensure SoundCloud widget and tracks are loaded
-    setTimeout(() => {
-        restorePlayerState();
-    }, 1500);
+    // Restore player state from previous page - start immediately and check frequently
+    // Try to restore as fast as possible to minimize latency
+    restorePlayerState();
+    
+    // Also try multiple times to catch widget when it's ready
+    let restoreAttempts = 0;
+    const maxRestoreAttempts = 20; // Try for 2 seconds (20 * 100ms)
+    const restoreInterval = setInterval(() => {
+        restoreAttempts++;
+        if (restoreAttempts >= maxRestoreAttempts) {
+            clearInterval(restoreInterval);
+        } else {
+            // Only restore if not already playing
+            if (!isPlaying && musicTracks.length > 0) {
+                restorePlayerState();
+            }
+        }
+    }, 100);
     
     // Also try to populate playlist on page load if episodes are available
     setTimeout(() => {
         if (podcastEpisodes.length > 0) {
             populatePlaylistTracks();
         }
-    }, 2000);
+    }, 500);
     
     // Update play button when audio starts/stops
     const audioPlayer = document.getElementById('audioPlayer');
@@ -916,6 +1001,34 @@ function playSoundCloudTrack(index, soundcloudId) {
                 updatePlayerMetadata();
                 updateProgress();
                 savePlayerState();
+                
+                // If restoring state and was playing, resume immediately on READY
+                const isRestoring = sessionStorage.getItem('urcRestoringState') === 'true';
+                if (isRestoring) {
+                    const savedState = sessionStorage.getItem('urcPlayerState');
+                    if (savedState) {
+                        const restoreState = JSON.parse(savedState);
+                        if (restoreState.isPlaying) {
+                            // Resume playback immediately
+                            soundcloudWidget.play();
+                            isPlaying = true;
+                            if (typeof updatePlayButton === 'function') {
+                                updatePlayButton();
+                            }
+                            // Restore position
+                            if (restoreState.currentTime > 0) {
+                                soundcloudWidget.getDuration((duration) => {
+                                    if (duration && restoreState.currentTime < duration) {
+                                        soundcloudWidget.seekTo(restoreState.currentTime * 1000);
+                                    }
+                                });
+                            }
+                            sessionStorage.removeItem('urcRestoringState');
+                        } else {
+                            sessionStorage.removeItem('urcRestoringState');
+                        }
+                    }
+                }
             });
         } else if (track.permalink) {
             // Create new widget for this track
