@@ -884,24 +884,39 @@ function initMusicPlayer() {
     volumeSlider.addEventListener('input', updateVolume);
     volumeBtn.addEventListener('click', toggleMute);
 
-    // Tempo control (Pitch adjustment) - Always default to zero
+    // Tempo control (Pitch adjustment) - Following decks.de behavior
     const tempoSlider = document.getElementById('tempoSlider');
     if (tempoSlider) {
-        // Always default to center position (8 = 0 pitch)
-        tempoSlider.value = '8';
+        // Default to center position (8 = 0 pitch, normal speed)
+        // Check if there's a saved pitch value in localStorage
+        const savedPitch = localStorage.getItem('urcPitchValue');
+        if (savedPitch !== null) {
+            tempoSlider.value = savedPitch;
+        } else {
+            tempoSlider.value = '8'; // Center = 0 pitch
+        }
         
-        // Initialize display
+        // Initialize display and apply tempo
         updateTempo();
         
-        // Apply tempo when slider changes - real-time updates
+        // Real-time pitch adjustment as user drags slider
         tempoSlider.addEventListener('input', () => {
-            updateTempo(); // This calls applyTempo() inside
+            updateTempo(); // Updates display and applies tempo in real-time
         });
         
+        // Final update when user releases slider
         tempoSlider.addEventListener('change', () => {
-            updateTempo(); // This calls applyTempo() inside
+            updateTempo();
+            // Save pitch value to localStorage for persistence
+            localStorage.setItem('urcPitchValue', tempoSlider.value);
             // Force apply one more time to ensure it sticks
             setTimeout(() => applyTempo(), 50);
+        });
+        
+        // Also handle mouseup for better responsiveness
+        tempoSlider.addEventListener('mouseup', () => {
+            updateTempo();
+            localStorage.setItem('urcPitchValue', tempoSlider.value);
         });
     }
 
@@ -950,13 +965,17 @@ function initMusicPlayer() {
         applyTempo();
     });
     
-    // Apply tempo immediately when ratechange event fires (if browser changes it)
+    // Monitor rate changes and re-apply pitch setting if needed
+    // This ensures pitch adjustment persists even if browser or other code changes playbackRate
     audioPlayer.addEventListener('ratechange', () => {
-        // Re-apply our tempo if browser changed it
         const pitchValue = getCurrentPitchValue();
-        const tempo = calculateTempoFromPitch(pitchValue);
-        if (Math.abs(audioPlayer.playbackRate - tempo) > 0.001) {
-            audioPlayer.playbackRate = tempo;
+        const expectedTempo = calculateTempoFromPitch(pitchValue);
+        const currentRate = audioPlayer.playbackRate || 1.0;
+        
+        // If the rate doesn't match our expected tempo, re-apply it
+        // This handles cases where the browser or other code might reset the rate
+        if (Math.abs(currentRate - expectedTempo) > 0.001) {
+            audioPlayer.playbackRate = expectedTempo;
         }
     });
     
@@ -998,23 +1017,28 @@ function loadTrack(index) {
     
     // Set up audio source for BPM detection and apply tempo
     if (track.audioUrl) {
-        // Apply tempo immediately
+        // Apply tempo immediately (preserves pitch setting across track changes)
         applyTempo();
         
+        // Re-apply tempo when track loads to ensure it's set correctly
         audioPlayer.addEventListener('loadeddata', () => {
             setupAudioSource();
-            // Re-apply tempo when track loads
-            applyTempo();
+            applyTempo(); // Maintain pitch setting when new track loads
         }, { once: true });
         
-        // Also apply tempo when audio can play
+        // Apply tempo when audio can play
         audioPlayer.addEventListener('canplay', () => {
-            applyTempo();
+            applyTempo(); // Ensure tempo is applied before playback
         }, { once: true });
         
         // Apply tempo when metadata loads
         audioPlayer.addEventListener('loadedmetadata', () => {
-            applyTempo();
+            applyTempo(); // Apply tempo as soon as metadata is available
+        }, { once: true });
+        
+        // Apply tempo when playback starts
+        audioPlayer.addEventListener('play', () => {
+            applyTempo(); // Ensure tempo is correct when playback starts
         }, { once: true });
     }
     
@@ -1025,10 +1049,16 @@ function loadTrack(index) {
 }
 
 // Internal function to calculate tempo from pitch value
+// Following decks.de logic: pitch adjustment affects tempo proportionally
+// pitchValue: -8 to +8 (percentage points)
+// Each unit = 1% change in playback speed
+// +8 = 108% speed (8% faster), -8 = 92% speed (8% slower)
 function calculateTempoFromPitch(pitchValue) {
-    // pitchValue: -8 to +8
-    // Each unit = 1% change, so +8 = 1.08x, -8 = 0.92x
-    return 1 + (pitchValue * 0.01);
+    // Clamp pitch value to valid range
+    const clampedPitch = Math.max(-8, Math.min(8, pitchValue));
+    // Calculate tempo multiplier: 1.0 = normal speed
+    // +8% = 1.08x speed, -8% = 0.92x speed
+    return 1.0 + (clampedPitch * 0.01);
 }
 
 // Internal function to get current pitch value from slider
@@ -1040,40 +1070,46 @@ function getCurrentPitchValue() {
 }
 
 // Apply tempo to audio player (internal function)
+// This function applies pitch adjustment which affects playback tempo
 function applyTempo() {
-    if (!audioPlayer) {
-        console.warn('Audio player not available');
-        return;
-    }
-    
     const pitchValue = getCurrentPitchValue();
     const tempo = calculateTempoFromPitch(pitchValue);
     
     // Apply to HTML5 audio player
-    try {
-        // Set playbackRate - this will slow down (pitch < 0) or speed up (pitch > 0) the audio
-        const previousRate = audioPlayer.playbackRate || 1.0;
-        audioPlayer.playbackRate = tempo;
-        
-        // Verify it was set
-        const actualRate = audioPlayer.playbackRate;
-        if (Math.abs(actualRate - tempo) > 0.001) {
-            console.warn('Playback rate mismatch. Expected:', tempo, 'Got:', actualRate);
-            // Try setting again
+    if (audioPlayer) {
+        try {
+            // Store previous rate for comparison
+            const previousRate = audioPlayer.playbackRate || 1.0;
+            
+            // Set playbackRate - this changes both pitch and tempo
+            // Following decks.de behavior: pitch adjustment = tempo adjustment
             audioPlayer.playbackRate = tempo;
+            
+            // Verify it was set correctly
+            const actualRate = audioPlayer.playbackRate;
+            if (Math.abs(actualRate - tempo) > 0.001) {
+                console.warn('Playback rate mismatch. Expected:', tempo, 'Got:', actualRate);
+                // Retry setting the rate
+                setTimeout(() => {
+                    audioPlayer.playbackRate = tempo;
+                }, 10);
+            }
+            
+            // Log significant changes for debugging
+            if (Math.abs(previousRate - tempo) > 0.001) {
+                console.log('✓ Pitch adjusted:', pitchValue.toFixed(1) + '%', '→ Tempo:', previousRate.toFixed(3) + 'x → ' + tempo.toFixed(3) + 'x');
+            }
+        } catch (error) {
+            console.error('Error applying tempo to HTML5 audio:', error);
         }
-        
-        // Log when rate changes significantly
-        if (Math.abs(previousRate - tempo) > 0.001) {
-            console.log('✓ Pitch adjusted:', pitchValue, '→ Tempo:', previousRate.toFixed(3) + 'x → ' + tempo.toFixed(3) + 'x');
-        }
-    } catch (error) {
-        console.error('Error applying tempo:', error);
     }
     
-    // Note: SoundCloud widget doesn't support playbackRate API
-    // Tempo control works with HTML5 audio sources
-    // For SoundCloud tracks, you would need direct audio stream access
+    // Note: SoundCloud widget API doesn't support playbackRate
+    // Pitch/tempo adjustment only works with HTML5 audio sources
+    // For SoundCloud tracks, the widget controls playback but doesn't expose tempo control
+    if (soundcloudWidget) {
+        console.log('Note: Pitch adjustment is not available for SoundCloud tracks. Use HTML5 audio sources for tempo control.');
+    }
 }
 
 function togglePlayPause() {
@@ -1356,26 +1392,32 @@ function updateTempo() {
     }
     
     const tempoValue = document.getElementById('tempoValue');
-    const pitchValue = getCurrentPitchValue(); // Use internal function
+    const pitchValue = getCurrentPitchValue(); // Get pitch value (-8 to +8)
     
-    // Update display with pitch value (matching turntable reference)
+    // Update display with pitch value (matching decks.de format)
+    // Shows: 0, +1, +2, ..., +8 or -1, -2, ..., -8
     if (tempoValue) {
-        if (pitchValue === 0) {
+        if (Math.abs(pitchValue) < 0.1) {
+            // At center position, show 0
             tempoValue.textContent = '0';
         } else if (pitchValue > 0) {
-            tempoValue.textContent = '+' + pitchValue.toFixed(0);
+            // Positive pitch (faster)
+            tempoValue.textContent = '+' + Math.round(pitchValue);
         } else {
-            tempoValue.textContent = pitchValue.toFixed(0);
+            // Negative pitch (slower)
+            tempoValue.textContent = Math.round(pitchValue).toString();
         }
     }
     
-    // Apply tempo immediately when slider changes
+    // Apply tempo immediately when slider changes (real-time adjustment)
     applyTempo();
     
-    // Update BPM display based on tempo
+    // Update BPM display based on tempo multiplier
+    // Adjusted BPM = Original BPM × Tempo Multiplier
     if (currentBPM) {
         const tempo = calculateTempoFromPitch(pitchValue);
-        updateBPMDisplay(currentBPM);
+        const adjustedBPM = Math.round(currentBPM * tempo);
+        updateBPMDisplay(adjustedBPM);
     }
 }
 
@@ -1625,11 +1667,11 @@ function highlightActiveTrackInPlaylist(soundcloudId) {
 
 function updateBPMDisplay(bpm) {
     const bpmValue = document.getElementById('bpmValue');
-    const tempoSlider = document.getElementById('tempoSlider');
-    const tempo = tempoSlider.value / 100;
     
     if (bpm && !isNaN(bpm)) {
-        // Adjust BPM based on tempo multiplier
+        // Calculate adjusted BPM based on current pitch/tempo setting
+        const pitchValue = getCurrentPitchValue();
+        const tempo = calculateTempoFromPitch(pitchValue);
         const adjustedBPM = Math.round(bpm * tempo);
         bpmValue.textContent = adjustedBPM;
     } else {
