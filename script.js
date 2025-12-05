@@ -247,22 +247,33 @@ function restorePlayerState() {
                     // Restore playback immediately - no delay
                     const restorePlayback = () => {
                         if (state.isPlaying) {
-                            // Play immediately
-                            soundcloudWidget.play();
-                            isPlaying = true;
-                            if (typeof updatePlayButton === 'function') {
-                                updatePlayButton();
-                            }
-                            
-                            // Restore position
-                            if (state.currentTime > 0) {
-                                soundcloudWidget.getDuration((duration) => {
-                                    if (duration && state.currentTime < duration) {
-                                        soundcloudWidget.seekTo(state.currentTime * 1000);
+                            // Play immediately - try multiple times to ensure it works
+                            try {
+                                soundcloudWidget.play();
+                                isPlaying = true;
+                                if (typeof updatePlayButton === 'function') {
+                                    updatePlayButton();
+                                }
+                                
+                                // Restore position immediately
+                                if (state.currentTime > 0) {
+                                    soundcloudWidget.getDuration((duration) => {
+                                        if (duration && state.currentTime < duration) {
+                                            soundcloudWidget.seekTo(state.currentTime * 1000);
+                                        }
+                                    });
+                                }
+                                sessionStorage.removeItem('urcRestoringState');
+                            } catch (e) {
+                                // If play fails, try again after a tiny delay
+                                setTimeout(() => {
+                                    soundcloudWidget.play();
+                                    isPlaying = true;
+                                    if (typeof updatePlayButton === 'function') {
+                                        updatePlayButton();
                                     }
-                                });
+                                }, 50);
                             }
-                            sessionStorage.removeItem('urcRestoringState');
                         } else {
                             sessionStorage.removeItem('urcRestoringState');
                         }
@@ -274,6 +285,20 @@ function restorePlayerState() {
                     // Also listen for READY event in case widget isn't ready yet
                     soundcloudWidget.bind(window.SC.Widget.Events.READY, () => {
                         restorePlayback();
+                    });
+                    
+                    // Also try on LOAD_PROGRESS for even faster restoration
+                    soundcloudWidget.bind(window.SC.Widget.Events.LOAD_PROGRESS, () => {
+                        if (state.isPlaying && !isPlaying) {
+                            restorePlayback();
+                        }
+                    });
+                    
+                    // Also try on LOAD_PROGRESS for even faster restoration
+                    soundcloudWidget.bind(window.SC.Widget.Events.LOAD_PROGRESS, () => {
+                        if (state.isPlaying && !isPlaying) {
+                            restorePlayback();
+                        }
                     });
                     return true;
                 } else if (track.audioUrl && audioPlayer) {
@@ -729,14 +754,27 @@ async function fetchSoundCloudPlaylist() {
 
 // Load SoundCloud Widget and extract tracks
 function loadSoundCloudWidget() {
-    // Create a hidden iframe for SoundCloud widget to extract track data
-    const widgetIframe = document.createElement('iframe');
-    widgetIframe.id = 'soundcloud-widget';
-    widgetIframe.style.display = 'none';
-    widgetIframe.allow = 'autoplay';
-    widgetIframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(SOUNDCLOUD_PLAYLIST_URL)}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
+    // Check if widget already exists (persistent across pages)
+    let widgetIframe = document.getElementById('soundcloud-widget');
     
-    document.body.appendChild(widgetIframe);
+    if (!widgetIframe) {
+        // Create a hidden iframe for SoundCloud widget to extract track data
+        widgetIframe = document.createElement('iframe');
+        widgetIframe.id = 'soundcloud-widget';
+        widgetIframe.style.display = 'none';
+        widgetIframe.allow = 'autoplay';
+        widgetIframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(SOUNDCLOUD_PLAYLIST_URL)}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
+        
+        // Append to body immediately
+        if (document.body) {
+            document.body.appendChild(widgetIframe);
+        } else {
+            // If body not ready, wait for it
+            document.addEventListener('DOMContentLoaded', () => {
+                document.body.appendChild(widgetIframe);
+            });
+        }
+    }
     
     // Wait for SoundCloud Widget API to be available
     const checkWidget = setInterval(() => {
@@ -1002,30 +1040,67 @@ function playSoundCloudTrack(index, soundcloudId) {
                 updateProgress();
                 savePlayerState();
                 
-                // If restoring state and was playing, resume immediately on READY
+                // If restoring state and was playing, resume IMMEDIATELY - no delay
                 const isRestoring = sessionStorage.getItem('urcRestoringState') === 'true';
                 if (isRestoring) {
                     const savedState = sessionStorage.getItem('urcPlayerState');
                     if (savedState) {
                         const restoreState = JSON.parse(savedState);
                         if (restoreState.isPlaying) {
-                            // Resume playback immediately
-                            soundcloudWidget.play();
-                            isPlaying = true;
-                            if (typeof updatePlayButton === 'function') {
-                                updatePlayButton();
-                            }
-                            // Restore position
-                            if (restoreState.currentTime > 0) {
-                                soundcloudWidget.getDuration((duration) => {
-                                    if (duration && restoreState.currentTime < duration) {
-                                        soundcloudWidget.seekTo(restoreState.currentTime * 1000);
+                            // Resume playback IMMEDIATELY - try multiple times to ensure it works
+                            try {
+                                soundcloudWidget.play();
+                                isPlaying = true;
+                                if (typeof updatePlayButton === 'function') {
+                                    updatePlayButton();
+                                }
+                                // Restore position immediately
+                                if (restoreState.currentTime > 0) {
+                                    soundcloudWidget.getDuration((duration) => {
+                                        if (duration && restoreState.currentTime < duration) {
+                                            soundcloudWidget.seekTo(restoreState.currentTime * 1000);
+                                        }
+                                    });
+                                }
+                                sessionStorage.removeItem('urcRestoringState');
+                            } catch (e) {
+                                // If play fails, try again immediately
+                                setTimeout(() => {
+                                    try {
+                                        soundcloudWidget.play();
+                                        isPlaying = true;
+                                        if (typeof updatePlayButton === 'function') {
+                                            updatePlayButton();
+                                        }
+                                    } catch (e2) {
+                                        console.error('Failed to restore playback:', e2);
                                     }
-                                });
+                                }, 10);
                             }
-                            sessionStorage.removeItem('urcRestoringState');
                         } else {
                             sessionStorage.removeItem('urcRestoringState');
+                        }
+                    }
+                }
+            });
+            
+            // Also try to restore on LOAD_PROGRESS for even faster restoration
+            soundcloudWidget.bind(window.SC.Widget.Events.LOAD_PROGRESS, () => {
+                const isRestoring = sessionStorage.getItem('urcRestoringState') === 'true';
+                if (isRestoring && !isPlaying) {
+                    const savedState = sessionStorage.getItem('urcPlayerState');
+                    if (savedState) {
+                        const restoreState = JSON.parse(savedState);
+                        if (restoreState.isPlaying) {
+                            try {
+                                soundcloudWidget.play();
+                                isPlaying = true;
+                                if (typeof updatePlayButton === 'function') {
+                                    updatePlayButton();
+                                }
+                            } catch (e) {
+                                // Ignore errors, will retry on READY
+                            }
                         }
                     }
                 }
