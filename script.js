@@ -49,6 +49,7 @@ let audioContext = null;
 let analyser = null;
 let bpmDetector = null;
 let currentBPM = null;
+let isDragging = false;
 
 // Initialize page
 // Navigation Menu Functionality
@@ -681,10 +682,14 @@ function playSoundCloudTrack(index, soundcloudId) {
             // Listen for track info updates from SoundCloud
             soundcloudWidget.bind(window.SC.Widget.Events.PLAY_PROGRESS, () => {
                 updatePlayerMetadata();
+                if (!isDragging) {
+                    updateProgress();
+                }
             });
             
             soundcloudWidget.bind(window.SC.Widget.Events.READY, () => {
                 updatePlayerMetadata();
+                updateProgress();
             });
         } else if (track.permalink) {
             // Create new widget for this track
@@ -711,10 +716,14 @@ function playSoundCloudTrack(index, soundcloudId) {
                     // Listen for metadata updates
                     soundcloudWidget.bind(window.SC.Widget.Events.READY, () => {
                         updatePlayerMetadata();
+                        updateProgress();
                     });
                     
                     soundcloudWidget.bind(window.SC.Widget.Events.PLAY_PROGRESS, () => {
                         updatePlayerMetadata();
+                        if (!isDragging) {
+                            updateProgress();
+                        }
                     });
                 }
             };
@@ -773,12 +782,68 @@ function initMusicPlayer() {
     rewindBtn.addEventListener('click', rewindTrack);
     forwardBtn.addEventListener('click', forwardTrack);
 
-    // Progress bar click
+    // Progress bar and scrubber drag functionality
+    const progressScrubber = document.getElementById('progressScrubber');
+    
+    // Handle scrubber drag
+    progressScrubber.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        isDragging = true;
+        progressBar.classList.add('dragging');
+        progressFill.style.transition = 'none';
+        progressScrubber.style.transition = 'transform 0.1s';
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            const rect = progressBar.getBoundingClientRect();
+            const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            seekToPosition(percent);
+        }
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            progressBar.classList.remove('dragging');
+            progressFill.style.transition = 'width 0.1s linear';
+            progressScrubber.style.transition = 'left 0.1s linear, transform 0.1s';
+        }
+    });
+    
+    // Progress bar click (also works for touch)
     progressBar.addEventListener('click', (e) => {
-        const rect = progressBar.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
-        if (audioPlayer.duration) {
-            audioPlayer.currentTime = percent * audioPlayer.duration;
+        if (!isDragging) {
+            const rect = progressBar.getBoundingClientRect();
+            const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            seekToPosition(percent);
+        }
+    });
+    
+    // Touch support for mobile
+    progressScrubber.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+        isDragging = true;
+        progressBar.classList.add('dragging');
+        progressFill.style.transition = 'none';
+        progressScrubber.style.transition = 'transform 0.1s';
+    });
+    
+    document.addEventListener('touchmove', (e) => {
+        if (isDragging) {
+            const rect = progressBar.getBoundingClientRect();
+            const touch = e.touches[0];
+            const percent = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+            seekToPosition(percent);
+        }
+    });
+    
+    document.addEventListener('touchend', () => {
+        if (isDragging) {
+            isDragging = false;
+            progressBar.classList.remove('dragging');
+            progressFill.style.transition = 'width 0.1s linear';
+            progressScrubber.style.transition = 'left 0.1s linear, transform 0.1s';
         }
     });
 
@@ -793,12 +858,26 @@ function initMusicPlayer() {
     // Track ended
     audioPlayer.addEventListener('ended', playNextTrack);
     
-    // Listen for SoundCloud track changes
+    // Listen for SoundCloud track changes and progress
     if (soundcloudWidget) {
         soundcloudWidget.bind(window.SC.Widget.Events.FINISH, () => {
             playNextTrack();
         });
+        
+        // Update progress for SoundCloud widget
+        soundcloudWidget.bind(window.SC.Widget.Events.PLAY_PROGRESS, () => {
+            if (!isDragging) {
+                updateProgress();
+            }
+        });
     }
+    
+    // Periodic update for progress (works for both HTML5 and SoundCloud)
+    setInterval(() => {
+        if (!isDragging && isPlaying) {
+            updateProgress();
+        }
+    }, 100); // Update every 100ms for smooth progress
 
     // Volume control
     const volumeSlider = document.getElementById('volumeSlider');
@@ -884,6 +963,9 @@ function initMusicPlayer() {
     // Initialize BPM detection
     initBPMDetection();
 
+    // Initialize time display
+    updateTimeDisplay(0, 0);
+    
     // Load first track if available
     if (musicTracks.length > 0) {
         loadTrack(0);
@@ -1138,10 +1220,80 @@ function forwardTrack() {
     }
 }
 
+function seekToPosition(percent) {
+    // Update scrubber position immediately for smooth dragging
+    const progressScrubber = document.getElementById('progressScrubber');
+    const progressFill = document.getElementById('progressFill');
+    if (progressScrubber) {
+        progressScrubber.style.left = (percent * 100) + '%';
+    }
+    if (progressFill) {
+        progressFill.style.width = (percent * 100) + '%';
+    }
+    
+    // Handle SoundCloud widget
+    if (soundcloudWidget) {
+        soundcloudWidget.getDuration((duration) => {
+            if (duration !== null && duration !== undefined) {
+                const position = percent * duration;
+                soundcloudWidget.seekTo(position);
+                updateTimeDisplay(position, duration);
+            }
+        });
+        return;
+    }
+    
+    // Handle HTML5 audio player
+    if (audioPlayer && audioPlayer.duration) {
+        audioPlayer.currentTime = percent * audioPlayer.duration;
+        updateTimeDisplay(audioPlayer.currentTime, audioPlayer.duration);
+    }
+}
+
 function updateProgress() {
-    if (audioPlayer.duration) {
+    if (isDragging) return; // Don't update while dragging
+    
+    // Handle SoundCloud widget
+    if (soundcloudWidget) {
+        soundcloudWidget.getPosition((position) => {
+            if (position !== null && position !== undefined) {
+                soundcloudWidget.getDuration((duration) => {
+                    if (duration !== null && duration !== undefined) {
+                        const percent = (position / duration) * 100;
+                        document.getElementById('progressFill').style.width = percent + '%';
+                        document.getElementById('progressScrubber').style.left = percent + '%';
+                        updateTimeDisplay(position, duration);
+                    }
+                });
+            }
+        });
+        return;
+    }
+    
+    // Handle HTML5 audio player
+    if (audioPlayer && audioPlayer.duration) {
         const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
         document.getElementById('progressFill').style.width = percent + '%';
+        document.getElementById('progressScrubber').style.left = percent + '%';
+        updateTimeDisplay(audioPlayer.currentTime, audioPlayer.duration);
+    }
+}
+
+function updateTimeDisplay(currentTime, duration) {
+    const timeDisplay = document.getElementById('timeDisplay');
+    if (!timeDisplay) return;
+    
+    // Format time as M:SS
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+    
+    if (duration) {
+        timeDisplay.textContent = formatTime(currentTime);
+    } else {
+        timeDisplay.textContent = '0:00';
     }
 }
 
