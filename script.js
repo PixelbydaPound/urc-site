@@ -517,34 +517,26 @@ function showProducts(category) {
     
     productsGrid.innerHTML = '';
     
-    // Add zine promo image as first card if category is zines
-    if (category === 'zines') {
-        const promoCard = document.createElement('div');
-        promoCard.className = 'product-card';
-        promoCard.style.cursor = 'default'; // Make it non-clickable or link to a specific page
-        
-        promoCard.innerHTML = `
-            <div class="product-image">
-                <img src="zine-promo.jpg" alt="Zine Promo" style="width: 100%; height: 100%; object-fit: cover;" />
-            </div>
-        `;
-        
-        productsGrid.appendChild(promoCard);
-    }
-    
     if (categoryProducts.length === 0) {
         productsGrid.innerHTML = '<p style="color: #ffffff; text-align: center; grid-column: 1 / -1;">No products available in this category.</p>';
         return;
     }
     
-    categoryProducts.forEach(product => {
+    categoryProducts.forEach((product, index) => {
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
         
-        // Create image placeholder or use product image if available
-        const imageHtml = product.image 
-            ? `<img src="${product.image}" alt="${product.name}" />`
-            : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3); font-size: 14px;">${product.name}</div>`;
+        // For zines, use promo image for the first product card
+        let imageHtml;
+        if (category === 'zines' && index === 0) {
+            // First zine card gets the promo image
+            imageHtml = `<img src="zine-promo.jpg" alt="${product.name}" />`;
+        } else {
+            // Other products use their own image or placeholder
+            imageHtml = product.image 
+                ? `<img src="${product.image}" alt="${product.name}" />`
+                : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3); font-size: 14px;">${product.name}</div>`;
+        }
         
         productCard.innerHTML = `
             <div class="product-image">${imageHtml}</div>
