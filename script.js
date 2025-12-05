@@ -767,6 +767,12 @@ function initMusicPlayer() {
     prevBtn.addEventListener('click', playPreviousTrack);
     nextBtn.addEventListener('click', playNextTrack);
 
+    // Forward/Rewind buttons
+    const rewindBtn = document.getElementById('rewindBtn');
+    const forwardBtn = document.getElementById('forwardBtn');
+    rewindBtn.addEventListener('click', rewindTrack);
+    forwardBtn.addEventListener('click', forwardTrack);
+
     // Progress bar click
     progressBar.addEventListener('click', (e) => {
         const rect = progressBar.getBoundingClientRect();
@@ -1073,6 +1079,62 @@ function playNextTrack() {
         if (isPlaying) {
             audioPlayer.play();
         }
+    }
+}
+
+function rewindTrack() {
+    const skipSeconds = 10;
+    
+    // Handle SoundCloud widget
+    if (soundcloudWidget) {
+        try {
+            soundcloudWidget.getPosition((position) => {
+                if (position !== null && position !== undefined) {
+                    const newPosition = Math.max(0, position - (skipSeconds * 1000));
+                    soundcloudWidget.seekTo(newPosition);
+                }
+            });
+            return;
+        } catch (error) {
+            console.log('Error rewinding SoundCloud track:', error);
+            // Fall through to HTML5 audio if available
+        }
+    }
+    
+    // Handle HTML5 audio player
+    if (audioPlayer && audioPlayer.duration && !isNaN(audioPlayer.currentTime)) {
+        const newTime = Math.max(0, audioPlayer.currentTime - skipSeconds);
+        audioPlayer.currentTime = newTime;
+    }
+}
+
+function forwardTrack() {
+    const skipSeconds = 10;
+    
+    // Handle SoundCloud widget
+    if (soundcloudWidget) {
+        try {
+            soundcloudWidget.getPosition((position) => {
+                if (position !== null && position !== undefined) {
+                    soundcloudWidget.getDuration((duration) => {
+                        if (duration !== null && duration !== undefined) {
+                            const newPosition = Math.min(duration, position + (skipSeconds * 1000));
+                            soundcloudWidget.seekTo(newPosition);
+                        }
+                    });
+                }
+            });
+            return;
+        } catch (error) {
+            console.log('Error forwarding SoundCloud track:', error);
+            // Fall through to HTML5 audio if available
+        }
+    }
+    
+    // Handle HTML5 audio player
+    if (audioPlayer && audioPlayer.duration && !isNaN(audioPlayer.currentTime)) {
+        const newTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + skipSeconds);
+        audioPlayer.currentTime = newTime;
     }
 }
 
