@@ -97,6 +97,149 @@
         </div>
     </footer>
 
+    <div class="music-player">
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+                <div class="progress-scrubber" id="progressScrubber">
+                    <div class="time-display" id="timeDisplay">0:00</div>
+                </div>
+            </div>
+        </div>
+        <div class="player-content">
+            <div class="player-controls">
+                <button class="player-btn" id="prevBtn" aria-label="Previous">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                        <line x1="5" y1="19" x2="5" y2="5"></line>
+                    </svg>
+                </button>
+                <button class="player-btn" id="rewindBtn" aria-label="Rewind 10 seconds">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 19 2 12 11 5 11 19"></polygon>
+                        <polygon points="22 19 13 12 22 5 22 19"></polygon>
+                    </svg>
+                </button>
+                <button class="player-btn play-btn" id="playBtn" aria-label="Play">
+                    <svg class="play-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    <svg class="pause-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+                        <rect x="6" y="4" width="4" height="16"></rect>
+                        <rect x="14" y="4" width="4" height="16"></rect>
+                    </svg>
+                </button>
+                <button class="player-btn" id="forwardBtn" aria-label="Forward 10 seconds">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 5 22 12 13 19 13 5"></polygon>
+                        <polygon points="2 5 11 12 2 19 2 5"></polygon>
+                    </svg>
+                </button>
+                <button class="player-btn" id="nextBtn" aria-label="Next">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                        <line x1="19" y1="5" x2="19" y2="19"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="player-thumbnail">
+                <div class="thumbnail-placeholder">URC</div>
+            </div>
+            <div class="player-info">
+                <div class="track-title" id="trackTitle">Select a track</div>
+                <div class="track-artist" id="trackArtist">URC</div>
+            </div>
+            <div class="player-actions">
+                <div class="volume-control">
+                    <button class="player-btn" id="volumeBtn" aria-label="Volume">
+                        <svg class="volume-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                        <svg class="volume-muted-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <line x1="23" y1="9" x2="17" y2="15"></line>
+                            <line x1="17" y1="9" x2="23" y2="15"></line>
+                        </svg>
+                    </button>
+                    <div class="volume-slider-container">
+                        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="100" aria-label="Volume">
+                    </div>
+                </div>
+                <div class="tempo-control" style="display: none;">
+                    <div class="bpm-display" style="display: none;">
+                        <span class="bpm-label">BPM</span>
+                        <span class="bpm-value" id="bpmValue">--</span>
+                    </div>
+                    <div class="pitch-control-container">
+                        <div class="pitch-label">pitch adj.</div>
+                        <div class="pitch-slider-wrapper">
+                            <div class="pitch-scale">
+                                <span class="scale-mark">+8</span>
+                                <span class="scale-mark">6</span>
+                                <span class="scale-mark">4</span>
+                                <span class="scale-mark">2</span>
+                                <span class="scale-mark">0</span>
+                                <span class="scale-mark">2</span>
+                                <span class="scale-mark">4</span>
+                                <span class="scale-mark">6</span>
+                                <span class="scale-mark">-8</span>
+                            </div>
+                            <div class="pitch-slider-track">
+                                <div class="pitch-center-indicator"></div>
+                                <input type="range" id="tempoSlider" class="pitch-slider" min="0" max="16" value="8" aria-label="Pitch Adjustment">
+                            </div>
+                            <div class="pitch-value-display" id="tempoValue">0</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="player-btn" id="playlistBtn" aria-label="Playlist">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <audio id="audioPlayer" preload="metadata"></audio>
+    </div>
+
+    <!-- Playlist Slide-out Panel -->
+    <div class="playlist-panel" id="playlistPanel">
+        <div class="playlist-panel-header">
+            <h3>NOW PLAYING</h3>
+            <button class="playlist-close-btn" id="playlistCloseBtn" aria-label="Close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="playlist-content" id="playlistContent">
+            <div class="current-track-info" id="currentTrackInfo">
+                <div class="track-artwork-large" id="trackArtworkLarge">
+                    <div class="artwork-placeholder">URC</div>
+                </div>
+                <div class="track-details">
+                    <h2 class="track-title-large" id="trackTitleLarge">Select a track</h2>
+                    <p class="track-artist-large" id="trackArtistLarge">URC</p>
+                    <div class="track-metadata" id="trackMetadata">
+                        <!-- Metadata will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="playlist-tracks" id="playlistTracks">
+                <!-- Playlist tracks will be loaded here -->
+            </div>
+        </div>
+    </div>
+    <div class="playlist-overlay" id="playlistOverlay"></div>
+
+    <script src="https://w.soundcloud.com/player/api.js"></script>
     <script src="script.js"></script>
     <script>
         // Load merchandise products

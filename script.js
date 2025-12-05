@@ -155,6 +155,141 @@ function initCart() {
     }
 }
 
+// Player state persistence functions
+function savePlayerState() {
+    try {
+        let currentTime = 0;
+        if (audioPlayer && audioPlayer.currentTime) {
+            currentTime = audioPlayer.currentTime;
+        }
+        
+        const state = {
+            currentTrackIndex: currentTrackIndex,
+            isPlaying: isPlaying,
+            volume: document.getElementById('volumeSlider')?.value || 100,
+            currentTime: currentTime,
+            trackTitle: document.getElementById('trackTitle')?.textContent || '',
+            trackArtist: document.getElementById('trackArtist')?.textContent || '',
+            trackThumbnail: document.querySelector('.player-thumbnail img')?.src || '',
+            isSoundCloud: soundcloudWidget ? true : false,
+            timestamp: Date.now()
+        };
+        
+        // For SoundCloud, get position asynchronously and update
+        if (soundcloudWidget && isPlaying) {
+            soundcloudWidget.getPosition((position) => {
+                if (position !== null && position !== undefined) {
+                    state.currentTime = position / 1000;
+                    sessionStorage.setItem('urcPlayerState', JSON.stringify(state));
+                } else {
+                    sessionStorage.setItem('urcPlayerState', JSON.stringify(state));
+                }
+            });
+        } else {
+            sessionStorage.setItem('urcPlayerState', JSON.stringify(state));
+        }
+    } catch (error) {
+        console.log('Error saving player state:', error);
+    }
+}
+
+function restorePlayerState() {
+    try {
+        const savedState = sessionStorage.getItem('urcPlayerState');
+        if (!savedState) return false;
+        
+        const state = JSON.parse(savedState);
+        
+        // Check if state is too old (more than 1 hour)
+        if (state.timestamp && (Date.now() - state.timestamp > 3600000)) {
+            sessionStorage.removeItem('urcPlayerState');
+            return false;
+        }
+        
+        // Restore volume
+        const volumeSlider = document.getElementById('volumeSlider');
+        if (volumeSlider && state.volume) {
+            volumeSlider.value = state.volume;
+            updateVolume();
+        }
+        
+        // Restore track info immediately (for UI)
+        if (state.trackTitle) {
+            document.getElementById('trackTitle').textContent = state.trackTitle;
+        }
+        if (state.trackArtist) {
+            document.getElementById('trackArtist').textContent = state.trackArtist;
+        }
+        if (state.trackThumbnail) {
+            const thumbnail = document.querySelector('.player-thumbnail');
+            thumbnail.innerHTML = `<img src="${state.trackThumbnail}" alt="${state.trackTitle}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        }
+        
+        // Wait for tracks to load before restoring playback
+        const checkTracksLoaded = setInterval(() => {
+            if (musicTracks.length > 0 && state.currentTrackIndex !== undefined) {
+                clearInterval(checkTracksLoaded);
+                
+                currentTrackIndex = state.currentTrackIndex;
+                const track = musicTracks[currentTrackIndex];
+                
+                if (track) {
+                    // Check if it's a SoundCloud track
+                    if (track.permalink && soundcloudWidget) {
+                        playSoundCloudTrack(currentTrackIndex, track.soundcloudId);
+                        if (state.currentTime > 0) {
+                            setTimeout(() => {
+                                soundcloudWidget.getDuration((duration) => {
+                                    if (duration && state.currentTime < duration) {
+                                        soundcloudWidget.seekTo(state.currentTime * 1000);
+                                    }
+                                });
+                            }, 1000);
+                        }
+                    } else if (track.audioUrl && audioPlayer) {
+                        loadTrack(currentTrackIndex);
+                        if (state.currentTime > 0) {
+                            audioPlayer.addEventListener('loadedmetadata', () => {
+                                if (state.currentTime < audioPlayer.duration) {
+                                    audioPlayer.currentTime = state.currentTime;
+                                }
+                            }, { once: true });
+                        }
+                        if (state.isPlaying) {
+                            setTimeout(() => {
+                                audioPlayer.play().catch(e => {
+                                    console.log('Auto-resume prevented:', e);
+                                });
+                            }, 200);
+                        }
+                    }
+                }
+            }
+        }, 100);
+        
+        setTimeout(() => {
+            clearInterval(checkTracksLoaded);
+        }, 5000);
+        
+        return true;
+    } catch (error) {
+        console.log('Error restoring player state:', error);
+        return false;
+    }
+}
+
+// Save state before page unload
+window.addEventListener('beforeunload', () => {
+    savePlayerState();
+});
+
+// Save state periodically while playing
+setInterval(() => {
+    if (isPlaying || audioPlayer?.currentTime > 0) {
+        savePlayerState();
+    }
+}, 2000);
+
 document.addEventListener('DOMContentLoaded', () => {
     initCart();
     setupCategoryButtons();
@@ -164,16 +299,28 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavMenu();
     initScrollReveal();
     
+    // Restore player state from previous page
+    setTimeout(() => {
+        restorePlayerState();
+    }, 500);
+    
     // Update play button when audio starts/stops
     const audioPlayer = document.getElementById('audioPlayer');
     if (audioPlayer) {
         audioPlayer.addEventListener('play', () => {
             isPlaying = true;
             updatePlayButton();
+            savePlayerState();
         });
         audioPlayer.addEventListener('pause', () => {
             isPlaying = false;
             updatePlayButton();
+            savePlayerState();
+        });
+        audioPlayer.addEventListener('timeupdate', () => {
+            if (isPlaying) {
+                savePlayerState();
+            }
         });
     }
 });
@@ -673,6 +820,9 @@ function playSoundCloudTrack(index, soundcloudId) {
             thumbnail.innerHTML = '<div class="thumbnail-placeholder">URC</div>';
         }
         
+        // Save state when track changes
+        savePlayerState();
+        
         // Use SoundCloud widget to play track
         if (soundcloudWidget && track.permalink) {
             soundcloudWidget.load(track.permalink, {
@@ -1120,10 +1270,12 @@ function togglePlayPause() {
             isPlaying = true;
             updatePlayButton();
             updatePlayerMetadata();
+            savePlayerState();
         });
         soundcloudWidget.bind(window.SC.Widget.Events.PAUSE, () => {
             isPlaying = false;
             updatePlayButton();
+            savePlayerState();
         });
         return;
     }
