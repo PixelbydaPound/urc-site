@@ -5,7 +5,7 @@ const products = {
         { id: 2, name: "URC 002", price: "$25", category: "records" },
     ],
     zines: [
-        { id: 3, name: "URC Zine 001", price: "$15", category: "zines" },
+        { id: 3, name: "URC Zine 001", price: "$15", category: "zines", image: "zine-promo.jpg" },
         { id: 4, name: "URC Zine 002", price: "$15", category: "zines" },
     ],
     merchandise: [
@@ -526,17 +526,10 @@ function showProducts(category) {
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
         
-        // For zines, use promo image for the first product card
-        let imageHtml;
-        if (category === 'zines' && index === 0) {
-            // First zine card gets the promo image
-            imageHtml = `<img src="zine-promo.jpg" alt="${product.name}" />`;
-        } else {
-            // Other products use their own image or placeholder
-            imageHtml = product.image 
-                ? `<img src="${product.image}" alt="${product.name}" />`
-                : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3); font-size: 14px;">${product.name}</div>`;
-        }
+        // Create image placeholder or use product image if available
+        const imageHtml = product.image 
+            ? `<img src="${product.image}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />`
+            : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3); font-size: 14px;">${product.name}</div>`;
         
         productCard.innerHTML = `
             <div class="product-image">${imageHtml}</div>
