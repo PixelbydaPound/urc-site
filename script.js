@@ -208,21 +208,27 @@ function restorePlayerState() {
         
         // Restore volume
         const volumeSlider = document.getElementById('volumeSlider');
-        if (volumeSlider && state.volume) {
+        if (volumeSlider && state.volume !== undefined) {
             volumeSlider.value = state.volume;
-            updateVolume();
+            if (typeof updateVolume === 'function') {
+                updateVolume();
+            }
         }
         
         // Restore track info immediately (for UI)
-        if (state.trackTitle) {
-            document.getElementById('trackTitle').textContent = state.trackTitle;
+        const trackTitleEl = document.getElementById('trackTitle');
+        const trackArtistEl = document.getElementById('trackArtist');
+        if (trackTitleEl && state.trackTitle) {
+            trackTitleEl.textContent = state.trackTitle;
         }
-        if (state.trackArtist) {
-            document.getElementById('trackArtist').textContent = state.trackArtist;
+        if (trackArtistEl && state.trackArtist) {
+            trackArtistEl.textContent = state.trackArtist;
         }
         if (state.trackThumbnail) {
             const thumbnail = document.querySelector('.player-thumbnail');
-            thumbnail.innerHTML = `<img src="${state.trackThumbnail}" alt="${state.trackTitle}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            if (thumbnail) {
+                thumbnail.innerHTML = `<img src="${state.trackThumbnail}" alt="${state.trackTitle || ''}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            }
         }
         
         // Wait for tracks to load before restoring playback
@@ -240,34 +246,44 @@ function restorePlayerState() {
                         const checkWidget = setInterval(() => {
                             if (soundcloudWidget) {
                                 clearInterval(checkWidget);
+                                
+                                // Mark that we're restoring state to prevent auto-play
+                                sessionStorage.setItem('urcRestoringState', 'true');
+                                
                                 playSoundCloudTrack(currentTrackIndex, track.soundcloudId);
                                 
-                                // Restore position and playing state
-                                if (state.currentTime > 0) {
-                                    setTimeout(() => {
+                                // Restore position and playing state after track loads
+                                setTimeout(() => {
+                                    if (state.currentTime > 0) {
                                         soundcloudWidget.getDuration((duration) => {
                                             if (duration && state.currentTime < duration) {
                                                 soundcloudWidget.seekTo(state.currentTime * 1000);
                                             }
                                         });
-                                    }, 1500);
-                                }
-                                
-                                // Resume playback if it was playing
-                                if (state.isPlaying) {
-                                    setTimeout(() => {
-                                        soundcloudWidget.play();
-                                        isPlaying = true;
-                                        updatePlayButton();
-                                    }, 2000);
-                                }
+                                    }
+                                    
+                                    // Resume playback if it was playing
+                                    if (state.isPlaying) {
+                                        setTimeout(() => {
+                                            soundcloudWidget.play();
+                                            isPlaying = true;
+                                            if (typeof updatePlayButton === 'function') {
+                                                updatePlayButton();
+                                            }
+                                            sessionStorage.removeItem('urcRestoringState');
+                                        }, 500);
+                                    } else {
+                                        sessionStorage.removeItem('urcRestoringState');
+                                    }
+                                }, 2000);
                             }
                         }, 100);
                         
-                        // Timeout after 10 seconds
+                        // Timeout after 15 seconds
                         setTimeout(() => {
                             clearInterval(checkWidget);
-                        }, 10000);
+                            sessionStorage.removeItem('urcRestoringState');
+                        }, 15000);
                     } else if (track.audioUrl && audioPlayer) {
                         loadTrack(currentTrackIndex);
                         if (state.currentTime > 0) {
@@ -618,9 +634,11 @@ function loadProductDetail() {
 // Fetch SoundCloud Playlist
 async function fetchSoundCloudPlaylist() {
     const episodesContainer = document.getElementById('podcastEpisodes');
-    episodesContainer.innerHTML = '<p>Loading podcast episodes...</p>';
+    if (episodesContainer) {
+        episodesContainer.innerHTML = '<p>Loading podcast episodes...</p>';
+    }
     
-    // Load SoundCloud Widget SDK and create widget
+    // Load SoundCloud Widget SDK and create widget (always load for player)
     loadSoundCloudWidget();
 }
 
@@ -748,11 +766,17 @@ function loadPodcastEpisodes() {
     const episodesContainer = document.getElementById('podcastEpisodes');
     
     if (podcastEpisodes.length === 0) {
-        episodesContainer.innerHTML = '<p>No episodes available yet.</p>';
+        if (episodesContainer) {
+            episodesContainer.innerHTML = '<p>No episodes available yet.</p>';
+        }
+        // Still try to populate playlist even if no episodes
+        populatePlaylistTracks();
         return;
     }
     
-    episodesContainer.innerHTML = '';
+    if (episodesContainer) {
+        episodesContainer.innerHTML = '';
+    }
     
     // Define custom order mapping based on image:
     // Top row: Francula (Vol 5), Victor Reyes (Vol 4), Samuel Tagger (Vol 2)
@@ -819,7 +843,9 @@ function loadPodcastEpisodes() {
             </button>
         `;
         
-        episodesContainer.appendChild(episodeCard);
+        if (episodesContainer) {
+            episodesContainer.appendChild(episodeCard);
+        }
     });
     
     // Add event listeners to play buttons
@@ -831,7 +857,7 @@ function loadPodcastEpisodes() {
         });
     });
     
-    // Populate playlist panel immediately when episodes are loaded
+    // Always populate playlist panel when episodes are loaded (works on all pages)
     if (podcastEpisodes.length > 0) {
         setTimeout(() => {
             populatePlaylistTracks();
@@ -863,8 +889,8 @@ function playSoundCloudTrack(index, soundcloudId) {
         // Use SoundCloud widget to play track
         if (soundcloudWidget && track.permalink) {
             // Check if we're restoring state - if so, don't auto-play
-            const savedState = sessionStorage.getItem('urcPlayerState');
-            const shouldAutoPlay = !savedState || JSON.parse(savedState).currentTrackIndex !== index;
+            const isRestoring = sessionStorage.getItem('urcRestoringState') === 'true';
+            const shouldAutoPlay = !isRestoring;
             
             soundcloudWidget.load(track.permalink, {
                 auto_play: shouldAutoPlay
@@ -872,7 +898,9 @@ function playSoundCloudTrack(index, soundcloudId) {
             
             if (shouldAutoPlay) {
                 isPlaying = true;
-                updatePlayButton();
+                if (typeof updatePlayButton === 'function') {
+                    updatePlayButton();
+                }
             }
             
             // Listen for track info updates from SoundCloud
