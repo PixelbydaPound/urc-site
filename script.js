@@ -235,17 +235,39 @@ function restorePlayerState() {
                 
                 if (track) {
                     // Check if it's a SoundCloud track
-                    if (track.permalink && soundcloudWidget) {
-                        playSoundCloudTrack(currentTrackIndex, track.soundcloudId);
-                        if (state.currentTime > 0) {
-                            setTimeout(() => {
-                                soundcloudWidget.getDuration((duration) => {
-                                    if (duration && state.currentTime < duration) {
-                                        soundcloudWidget.seekTo(state.currentTime * 1000);
-                                    }
-                                });
-                            }, 1000);
-                        }
+                    if (track.permalink) {
+                        // Wait for SoundCloud widget to be ready
+                        const checkWidget = setInterval(() => {
+                            if (soundcloudWidget) {
+                                clearInterval(checkWidget);
+                                playSoundCloudTrack(currentTrackIndex, track.soundcloudId);
+                                
+                                // Restore position and playing state
+                                if (state.currentTime > 0) {
+                                    setTimeout(() => {
+                                        soundcloudWidget.getDuration((duration) => {
+                                            if (duration && state.currentTime < duration) {
+                                                soundcloudWidget.seekTo(state.currentTime * 1000);
+                                            }
+                                        });
+                                    }, 1500);
+                                }
+                                
+                                // Resume playback if it was playing
+                                if (state.isPlaying) {
+                                    setTimeout(() => {
+                                        soundcloudWidget.play();
+                                        isPlaying = true;
+                                        updatePlayButton();
+                                    }, 2000);
+                                }
+                            }
+                        }, 100);
+                        
+                        // Timeout after 10 seconds
+                        setTimeout(() => {
+                            clearInterval(checkWidget);
+                        }, 10000);
                     } else if (track.audioUrl && audioPlayer) {
                         loadTrack(currentTrackIndex);
                         if (state.currentTime > 0) {
@@ -269,7 +291,7 @@ function restorePlayerState() {
         
         setTimeout(() => {
             clearInterval(checkTracksLoaded);
-        }, 5000);
+        }, 10000);
         
         return true;
     } catch (error) {
@@ -300,9 +322,17 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollReveal();
     
     // Restore player state from previous page
+    // Wait longer to ensure SoundCloud widget and tracks are loaded
     setTimeout(() => {
         restorePlayerState();
-    }, 500);
+    }, 1500);
+    
+    // Also try to populate playlist on page load if episodes are available
+    setTimeout(() => {
+        if (podcastEpisodes.length > 0) {
+            populatePlaylistTracks();
+        }
+    }, 2000);
     
     // Update play button when audio starts/stops
     const audioPlayer = document.getElementById('audioPlayer');
@@ -800,6 +830,13 @@ function loadPodcastEpisodes() {
             playSoundCloudTrack(index, soundcloudId);
         });
     });
+    
+    // Populate playlist panel immediately when episodes are loaded
+    if (podcastEpisodes.length > 0) {
+        setTimeout(() => {
+            populatePlaylistTracks();
+        }, 300);
+    }
 }
 
 // Play SoundCloud track in bottom player
@@ -825,9 +862,18 @@ function playSoundCloudTrack(index, soundcloudId) {
         
         // Use SoundCloud widget to play track
         if (soundcloudWidget && track.permalink) {
+            // Check if we're restoring state - if so, don't auto-play
+            const savedState = sessionStorage.getItem('urcPlayerState');
+            const shouldAutoPlay = !savedState || JSON.parse(savedState).currentTrackIndex !== index;
+            
             soundcloudWidget.load(track.permalink, {
-                auto_play: true
+                auto_play: shouldAutoPlay
             });
+            
+            if (shouldAutoPlay) {
+                isPlaying = true;
+                updatePlayButton();
+            }
             
             // Listen for track info updates from SoundCloud
             soundcloudWidget.bind(window.SC.Widget.Events.PLAY_PROGRESS, () => {
@@ -835,11 +881,13 @@ function playSoundCloudTrack(index, soundcloudId) {
                 if (!isDragging) {
                     updateProgress();
                 }
+                savePlayerState(); // Save state during playback
             });
             
             soundcloudWidget.bind(window.SC.Widget.Events.READY, () => {
                 updatePlayerMetadata();
                 updateProgress();
+                savePlayerState();
             });
         } else if (track.permalink) {
             // Create new widget for this track
@@ -1678,8 +1726,8 @@ function openPlaylistPanel() {
     playlistOverlay.classList.add('active');
     document.body.style.overflow = 'hidden';
     
-    // Populate playlist if not already done
-    if (podcastEpisodes.length > 0 && document.getElementById('playlistTracks').children.length === 0) {
+    // Always populate playlist - ensure it's always up to date
+    if (podcastEpisodes.length > 0) {
         populatePlaylistTracks();
     }
     
@@ -1767,8 +1815,12 @@ function updatePlaylistPanelTrack(sound) {
 
 function populatePlaylistTracks() {
     const playlistTracks = document.getElementById('playlistTracks');
-    if (!playlistTracks) return;
+    if (!playlistTracks) {
+        // Playlist panel might not exist on all pages, that's okay
+        return;
+    }
     
+    // Always repopulate to ensure it's up to date and available
     playlistTracks.innerHTML = '';
     
     podcastEpisodes.forEach((episode, index) => {
