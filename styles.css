@@ -992,8 +992,10 @@ footer {
 
 .time-display {
     position: absolute;
-    top: 0;
-    left: 20px;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 6px;
     background-color: #333;
     color: #ffffff;
     padding: 4px 8px;
@@ -1002,6 +1004,31 @@ footer {
     font-weight: 600;
     font-family: var(--font-body);
     z-index: 10;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    pointer-events: none;
+}
+
+.time-display::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #333;
+}
+
+.progress-bar:hover .time-display,
+.progress-bar.dragging .time-display,
+.progress-scrubber:hover .time-display {
+    opacity: 1;
+    visibility: visible;
 }
 
 .progress-bar {
@@ -1035,6 +1062,9 @@ footer {
     z-index: 5;
     pointer-events: auto;
     transition: left 0.1s linear, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .progress-scrubber:active {

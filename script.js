@@ -1245,8 +1245,9 @@ function seekToPosition(percent) {
     
     // Handle HTML5 audio player
     if (audioPlayer && audioPlayer.duration) {
-        audioPlayer.currentTime = percent * audioPlayer.duration;
-        updateTimeDisplay(audioPlayer.currentTime, audioPlayer.duration);
+        const newTime = percent * audioPlayer.duration;
+        audioPlayer.currentTime = newTime;
+        updateTimeDisplay(newTime, audioPlayer.duration);
     }
 }
 
